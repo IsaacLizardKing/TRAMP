@@ -1,0 +1,25 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Vertex
+{
+    float3 pos;
+    float3 norm;
+    float4 color;
+    float2 uv0;
+};
+
+float Time;
+RWStructuredBuffer<uint> IndexBuffer;
+RWStructuredBuffer<Vertex> VertexBuffer;
+
+[numthreads(32,1,1)]
+void CSMain (uint id : SV_DispatchThreadID)
+{
+    float offset = sin(Time * 2) * 0.01;
+    VertexBuffer[id].pos = VertexBuffer[id].pos + float3(offset, offset, offset);
+    IndexBuffer[id] = id;
+}
+
+// https://discussions.unity.com/t/rendering-directly-from-compute-buffers/1559466/5
+// From Arithmetica
