@@ -65,13 +65,13 @@ public class ExperimentComputeMesh : MonoBehaviour
 
         computeShader.SetFloat("Time", simulationTime);
         computeShader.SetFloat("Isolevel", Isolevel);
-        computeShader.SetInt("Case", Case);
+        computeShader.SetInt("Case", (int)simulationTime % 32);
         computeShader.SetBuffer(kernel, "IndexBuffer", indexBuffer);
         computeShader.SetBuffer(kernel, "VertexBuffer", vertexBuffer);
         computeShader.Dispatch(kernel, groups, 1, 1);
 
         simulationTime += Time.deltaTime;
-        Debug.Log(mesh.vertices);
+        
     }
 
     Mesh CreateMesh()
