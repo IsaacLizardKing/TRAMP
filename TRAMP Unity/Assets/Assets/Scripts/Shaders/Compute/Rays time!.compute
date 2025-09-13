@@ -1,0 +1,190 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+//#include "/MarchingTables.compute"
+
+static const int triTable[288] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 0
+     0,  1,  4, -1, -1, -1, -1, -1, -1,   // 1
+     4,  8,  5, -1, -1, -1, -1, -1, -1,   // 2
+     0,  1,  5,  1,  8,  5, -1, -1, -1,   // 3
+     0,  5,  2, -1, -1, -1, -1, -1, -1,   // 4
+     4,  5,  1,  2,  1,  5, -1, -1, -1,   // 5
+     0,  4,  8,  0,  8,  2, -1, -1, -1,   // 6
+     1,  8,  2, -1, -1, -1, -1, -1, -1,   // 7
+     1,  6,  3, -1, -1, -1, -1, -1, -1,   // 8
+     0,  4,  6,  0,  6,  3, -1, -1, -1,   // 9
+     1,  6,  2,  2,  6,  7, -1, -1, -1,   // 10
+     2,  6,  7,  2,  4,  6,  0,  4,  2,   // 11
+     1,  6,  3,  0,  5,  2, -1, -1, -1,   // 12
+     2,  6,  7,  2,  4,  6,  0,  4,  2,   // 13
+     0,  4,  2,  2,  4,  8,  1,  6,  3,   // 14
+     0,  5,  2,  6,  8,  7, -1, -1, -1,   // 15
+     6,  8,  7, -1, -1, -1, -1, -1, -1,   // 16
+     6,  8,  7,  0,  1,  4, -1, -1, -1,   // 17
+     4,  6,  5,  5,  6,  7, -1, -1, -1,   // 18
+     1,  6,  7,  1,  5,  0,  5,  1,  6,   // 19
+     0,  5,  2,  6,  8,  7, -1, -1, -1,   // 20
+     4,  5,  1,  2,  1,  5,  6,  8,  7,   // 21
+     0,  4,  6,  0,  6,  2,  6,  7,  2,   // 22
+     1,  6,  2,  2,  6,  7, -1, -1, -1,   // 23
+     1,  8,  7,  1,  7,  3, -1, -1, -1,   // 24
+     0,  4,  8,  8,  7,  3,  0,  8,  3,   // 25
+     4,  5,  1,  1,  5,  3,  3,  5,  7,   // 26
+     0,  5,  3,  3,  8,  7, -1, -1, -1,   // 27
+     1,  8,  7,  1,  7,  3,  0,  5,  2,   // 28
+     4,  8,  5,  2,  3,  7, -1, -1, -1,   // 29
+     0,  1,  4,  2,  3,  7, -1, -1, -1,   // 30
+     2,  3,  7, -1, -1, -1, -1, -1, -1    // 31
+    };
+
+static const int edgeTable[18] = {
+    0, 2, // 0
+    0, 3, // 1
+    2, 5, // 2
+    3, 5, // 3
+    0, 1, // 4
+    1, 2, // 5
+    3, 4, // 6
+    4, 5, // 7
+    1, 4  // 8
+    };
+
+struct Vertex
+{
+    float3 pos;
+    float3 norm;
+    float4 color;
+    float2 uv0;
+};
+
+float Time;
+float Isolevel;
+int Case;
+RWStructuredBuffer<uint> IndexBuffer;
+RWStructuredBuffer<Vertex> VertexBuffer;
+
+float Sample (float3 pos, float time) 
+{
+    float x = pos.x;
+    //float y = pos.y;
+    //float z = pos.z;
+    //float d = sqrt(x * x + y * y + z * z) + time * 0.1;
+    return x;
+}
+
+bool boolSample (float3 pos, float time) 
+{
+    return Sample(pos, time) > 0.5;
+}
+
+float3 interpolateVertex(int lookup, float3 ps[6], float ws[6]) {
+    
+    int edge = triTable[lookup];
+    if (edge != -1) {
+        float3 p1 = ps[edgeTable[edge * 2]];
+        float3 p2 = ps[edgeTable[edge * 2 + 1]];
+        float t = 0.5; // (Isolevel - ws[edgeTable[edge * 2]]) / (ws[edgeTable[edge * 2 + 1]] -  ws[edgeTable[edge * 2]]);
+        float3 p3 = float3(p1.x + t * (p2.x - p1.x), p1.y + t * (p2.y - p1.y), p1.z + t * (p2.z - p1.z));
+
+        return p3;
+    } else {
+        return ps[0];
+    }
+}
+
+float3 calculateFaceNormals(float3 p1, float3 p2, float3 p3) {
+    float3 A = p2 - p1;
+    float3 B = p3 - p1;
+    float3 N = float3(A.y * B.z - A.z * B.y, A.z * B.x - A.x * B.z, A.x * B.y - A.y * B.x);
+    return normalize(N);
+}
+
+
+[numthreads(1,1,1)]
+void CSMain (uint id : SV_DispatchThreadID)
+{
+    float phi = 1.61803398875;
+    float3 v1 = normalize(float3(phi, 1, 0));
+    float3 v2 = normalize(float3(phi, -1, 0));
+    float3 v3 = normalize(float3(1, 0, phi));
+
+    float3 samplePoints[6] = {
+        (v1 * 0),
+        (v2 * 0),
+        (v3 * 0),
+        (v1 * 0.05),
+        (v2 * 0.05),
+        (v3 * 0.05)
+    };
+    float ws[6] = {
+        Isolevel, 
+        Isolevel, 
+        Isolevel, 
+        Sample(samplePoints[0], Time), 
+        Sample(samplePoints[1], Time), 
+        Sample(samplePoints[2], Time), 
+    };
+
+    uint lookup = 0;
+    if (ws[3] > Isolevel) lookup |= 8;
+    if (ws[4] > Isolevel) lookup |= 16;
+    if (ws[5] > Isolevel) lookup |= 32;
+
+    for(int i = 0; i < 8; i++) {
+        if((ws[0] > Isolevel) & lookup != lookup) lookup = !lookup & 63;
+        lookup /= 8;
+        samplePoints[0] = samplePoints[3];
+        samplePoints[1] = samplePoints[4];
+        samplePoints[2] = samplePoints[5];
+        samplePoints[3] = v1 * (i + 1);
+        samplePoints[4] = v2 * (i + 1);
+        samplePoints[5] = v3 * (i + 1);
+        ws[0] = ws[3];
+        ws[1] = ws[4];
+        ws[2] = ws[5];
+        ws[3] = Sample(samplePoints[3], Time);
+        ws[4] = Sample(samplePoints[4], Time);
+        ws[5] = Sample(samplePoints[5], Time);
+        if(ws[3] > Isolevel) lookup |= 8;
+        if(ws[4] > Isolevel) lookup |= 16;
+        if(ws[5] > Isolevel) lookup |= 32;
+        if (lookup > 31) lookup = !lookup & 63;
+        if (Case != 0) lookup = Case;
+        lookup *= 9;
+        if(id == 0) {
+            VertexBuffer[0 + i * 9].pos -= (VertexBuffer[0 + i * 9].pos - interpolateVertex(lookup,  samplePoints, ws)) * 0.1;
+            VertexBuffer[1 + i * 9].pos -= (VertexBuffer[1 + i * 9].pos - interpolateVertex(lookup + 1, samplePoints, ws)) * 0.1;
+            VertexBuffer[2 + i * 9].pos -= (VertexBuffer[2 + i * 9].pos - interpolateVertex(lookup + 2, samplePoints, ws)) * 0.1;
+            VertexBuffer[3 + i * 9].pos -= (VertexBuffer[3 + i * 9].pos - interpolateVertex(lookup + 3, samplePoints, ws)) * 0.1;
+            VertexBuffer[4 + i * 9].pos -= (VertexBuffer[4 + i * 9].pos - interpolateVertex(lookup + 4, samplePoints, ws)) * 0.1;
+            VertexBuffer[5 + i * 9].pos -= (VertexBuffer[5 + i * 9].pos - interpolateVertex(lookup + 5, samplePoints, ws)) * 0.1;
+            VertexBuffer[6 + i * 9].pos -= (VertexBuffer[6 + i * 9].pos - interpolateVertex(lookup + 6, samplePoints, ws)) * 0.1;
+            VertexBuffer[7 + i * 9].pos -= (VertexBuffer[7 + i * 9].pos - interpolateVertex(lookup + 7, samplePoints, ws)) * 0.1;
+            VertexBuffer[8 + i * 9].pos -= (VertexBuffer[8 + i * 9].pos - interpolateVertex(lookup + 8, samplePoints, ws)) * 0.1;
+        }
+        if(id.x == 1){
+            float3 normal1 = calculateFaceNormals(VertexBuffer[0 + i * 9].pos, VertexBuffer[1 + i * 9].pos, VertexBuffer[2 + i * 9].pos);
+            VertexBuffer[0 + i * 9].norm = normal1;
+            VertexBuffer[1 + i * 9].norm = normal1;
+            VertexBuffer[2 + i * 9].norm = normal1;
+            normal1 = calculateFaceNormals(VertexBuffer[3 + i * 9].pos, VertexBuffer[4 + i * 9].pos, VertexBuffer[5 + i * 9].pos);
+            VertexBuffer[3 + i * 9].norm = normal1;
+            VertexBuffer[4 + i * 9].norm = normal1;
+            VertexBuffer[5 + i * 9].norm = normal1;
+            normal1 = calculateFaceNormals(VertexBuffer[6 + i * 9].pos, VertexBuffer[7 + i * 9].pos, VertexBuffer[8 + i * 9].pos);
+            VertexBuffer[6 + i * 9].norm = normal1;
+            VertexBuffer[7 + i * 9].norm = normal1;
+            VertexBuffer[8 + i * 9].norm = normal1;
+            lookup /= 9;
+        }
+    }
+    /*
+    float offset = sin(Time * 2) * 0.01;
+    VertexBuffer[id].pos = VertexBuffer[id].pos + float3(offset, offset, offset);
+    IndexBuffer[id] = id;*/
+}
+
+
+// https://discussions.unity.com/t/rendering-directly-from-compute-buffers/1559466/5
+// From Arithmetica

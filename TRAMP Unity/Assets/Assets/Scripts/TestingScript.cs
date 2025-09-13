@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 public class ExperimentComputeMesh : MonoBehaviour
 {
-    [Range(-1f, 1f)]
+    [Range(-1f, 10f)]
     public float Isolevel;
 
     [Range(0, 31)] 
@@ -29,8 +29,8 @@ public class ExperimentComputeMesh : MonoBehaviour
     GraphicsBuffer vertexBuffer;
     float simulationTime;
 
-    const int vertexCount = 9;
-    const int indexCount = 9;
+    const int vertexCount = 18;
+    const int indexCount = 18;
 
     void Start()
     {
@@ -65,7 +65,7 @@ public class ExperimentComputeMesh : MonoBehaviour
 
         computeShader.SetFloat("Time", simulationTime);
         computeShader.SetFloat("Isolevel", Isolevel);
-        computeShader.SetInt("Case", (int)simulationTime % 32);
+        computeShader.SetInt("Case", Case);
         computeShader.SetBuffer(kernel, "IndexBuffer", indexBuffer);
         computeShader.SetBuffer(kernel, "VertexBuffer", vertexBuffer);
         computeShader.Dispatch(kernel, groups, 1, 1);
@@ -93,21 +93,16 @@ public class ExperimentComputeMesh : MonoBehaviour
         };
         mesh.SetVertexBufferParams(vertexCount, vertexLayout);
 
-        var initialVertices = new Vertex[vertexCount] {
-            new Vertex { position = new Vector3(1f, 0f, 0.5f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one / 2, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0.25f, 0.5f, 1f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one / 3, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0.75f, 0.5f, 1f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(1f, 0f, 0.5f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one / 2, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0.25f, 0.5f, 0f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one / 3, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0.25f, 0.5f, 1f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0.5f, 0f, 0f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one / 2, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0.25f, 0.5f, 0f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one / 3, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(1f, 0f, 0.5f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one, uv0 = new Vector2(0, 0) }
-        };
-        mesh.SetVertexBufferData(initialVertices, 0, 0, vertexCount);
+        var initialVertices = new Vertex[vertexCount];
 
         mesh.SetIndexBufferParams(indexCount, IndexFormat.UInt32);
-        var indices = new int[indexCount] { 0, 1, 2, 3, 4, 5, 6, 7, 8 }; 
+        var indices = new int[indexCount]; 
+        for(int i = 0; i < vertexCount; i++) {
+            initialVertices[i] = new Vertex { position = new Vector3(0f, 0f, 0f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one / 2, uv0 = new Vector2(0, 0) };
+            indices[i] = i;
+        }
+        mesh.SetVertexBufferData(initialVertices, 0, 0, vertexCount);
+
         mesh.SetIndexBufferData(indices, 0, 0, indexCount);
 
         mesh.subMeshCount = 1;
