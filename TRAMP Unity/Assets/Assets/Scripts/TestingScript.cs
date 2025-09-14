@@ -20,17 +20,21 @@ public class ExperimentComputeMesh : MonoBehaviour
         public Vector2 uv0;
     }
 
+    GraphicsBuffer rays; 
+    GraphicsBuffer raysIndexes;
+
     [SerializeField] Material material;
     [SerializeField] ComputeShader computeShader;
     [SerializeField] Bounds bounds = new Bounds(Vector3.zero, new Vector3(1000, 1000, 1000)); // set your value
 
     Mesh mesh;
+    Mesh Wesh;
     GraphicsBuffer indexBuffer;
     GraphicsBuffer vertexBuffer;
     float simulationTime;
 
-    const int vertexCount = 18;
-    const int indexCount = 18;
+    const int vertexCount = 4608;
+    const int indexCount  = 4608;
 
     void Start()
     {
@@ -40,6 +44,8 @@ public class ExperimentComputeMesh : MonoBehaviour
         mesh = CreateMesh();
         meshFilter.sharedMesh = mesh;
         meshRenderer.sharedMaterial = material;
+
+        makeDaRays();
 
         indexBuffer = mesh.GetIndexBuffer();
         vertexBuffer = mesh.GetVertexBuffer(0);
@@ -68,7 +74,9 @@ public class ExperimentComputeMesh : MonoBehaviour
         computeShader.SetInt("Case", Case);
         computeShader.SetBuffer(kernel, "IndexBuffer", indexBuffer);
         computeShader.SetBuffer(kernel, "VertexBuffer", vertexBuffer);
-        computeShader.Dispatch(kernel, groups, 1, 1);
+        computeShader.SetBuffer(kernel, "rays", rays);
+        computeShader.SetBuffer(kernel, "raysIndexes", raysIndexes);
+        computeShader.Dispatch(kernel, groups, 1, 1); 
 
         simulationTime += Time.deltaTime;
         
@@ -111,5 +119,92 @@ public class ExperimentComputeMesh : MonoBehaviour
         mesh.RecalculateNormals();
 
         return mesh;
+    }
+
+    void makeDaRays() {
+        var initalRays = new Vector3[12];
+        float phi = 1.618033988749894f;
+        initalRays[0] = new Vector3(-1, phi, 0);
+        initalRays[1] = new Vector3(1, phi, 0);
+        initalRays[2] = new Vector3(-1, -phi, 0);
+        initalRays[3] = new Vector3(1, -phi, 0);
+        initalRays[4] = new Vector3(0, -1, phi);
+        initalRays[5] = new Vector3(0, 1, phi);
+        initalRays[6] = new Vector3(0, -1, -phi);
+        initalRays[7] = new Vector3(0, 1, -phi);
+        initalRays[8] = new Vector3(phi, 0, -1);
+        initalRays[9] = new Vector3(phi, 0, 1);
+        initalRays[10] = new Vector3(-phi, 0, -1);
+        initalRays[11] = new Vector3(-phi, 0, 1);
+
+        var initialRays = new Vertex[12];
+        for(int i = 0; i < 12; i++) {
+            initialRays[i] = new Vertex { position = initalRays[i], normal = new Vector3(0f, 0f, -1f), color = Vector4.zero, uv0 = new Vector2(0, 0) };
+        }
+
+        var initialRaysIndexes = new int[] {
+            0, 11, 5, 
+            0, 5, 1,
+            0, 1, 7,
+            0, 7, 10,
+            0, 10, 11,
+            1, 5, 9,
+            5, 11, 4,
+            11, 10, 2,
+            10, 7, 6,
+            7, 1, 8,
+            3, 9, 4,
+            3, 4, 2,
+            3, 2, 6,
+            3, 6, 8,
+            3, 8, 9,
+            4, 9, 5,
+            2, 4, 11,
+            6, 2, 10,
+            8, 6, 7,
+            9, 8, 1,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0 
+        };
+
+        Wesh = new Mesh();
+        Wesh.name = "Icosahedron";
+
+        Wesh.vertexBufferTarget |= GraphicsBuffer.Target.Structured; // for access as StructuredBuffer from compute shaders
+        Wesh.indexBufferTarget |= GraphicsBuffer.Target.Structured; // for access as StructuredBuffer from compute shaders
+
+        Wesh.bounds = bounds;
+
+        var vertexLayout = new[]
+        {
+            new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
+            new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3),
+            new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.Float32, 4),
+            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2)
+        };
+
+        Wesh.SetVertexBufferParams(12, vertexLayout);
+        Wesh.SetIndexBufferParams(96, IndexFormat.UInt32);
+
+        Wesh.SetVertexBufferData(initialRays, 0, 0, 12);
+        Wesh.SetIndexBufferData(initialRaysIndexes, 0, 0, 96);
+
+        Wesh.subMeshCount = 1;
+        Wesh.SetSubMesh(0, new SubMeshDescriptor(0, 96), MeshUpdateFlags.DontRecalculateBounds);
+
+        Wesh.RecalculateNormals();
+
+        rays = Wesh.GetVertexBuffer(0);
+        raysIndexes = Wesh.GetIndexBuffer();
     }
 }
