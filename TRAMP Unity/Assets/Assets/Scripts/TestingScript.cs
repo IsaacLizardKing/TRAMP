@@ -10,6 +10,9 @@ public class ExperimentComputeMesh : MonoBehaviour
     [Range(0, 31)] 
     public int Case;
 
+    [Range(0, 10)] 
+    public int Depth;
+
 
     [StructLayout(LayoutKind.Sequential)]
     struct Vertex
@@ -72,6 +75,8 @@ public class ExperimentComputeMesh : MonoBehaviour
         computeShader.SetFloat("Time", simulationTime);
         computeShader.SetFloat("Isolevel", Isolevel);
         computeShader.SetInt("Case", Case);
+        computeShader.SetInt("Depth", Depth);
+        computeShader.SetVector("offset", this.transform.position);
         computeShader.SetBuffer(kernel, "IndexBuffer", indexBuffer);
         computeShader.SetBuffer(kernel, "VertexBuffer", vertexBuffer);
         computeShader.SetBuffer(kernel, "rays", rays);

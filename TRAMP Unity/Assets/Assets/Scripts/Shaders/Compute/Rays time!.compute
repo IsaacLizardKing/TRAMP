@@ -60,6 +60,7 @@ struct Vertex {
 float Time;
 float Isolevel;
 int Case;
+int Depth = 8;
 RWStructuredBuffer<uint> IndexBuffer;
 RWStructuredBuffer<Vertex> VertexBuffer;
 RWStructuredBuffer<Vertex> rays;
@@ -130,7 +131,7 @@ void CSMain (uint id : SV_DispatchThreadID)
     if (ws[4] > Isolevel) lookup |= 16;
     if (ws[5] > Isolevel) lookup |= 32;
 
-    for(int i = 0; i < 8; i++) {
+    for(int i = 0; i < Depth; i++) {
         if((ws[0] > Isolevel) & lookup != lookup) lookup = !lookup & 63;
         lookup >> 3;
         samplePoints[0] = samplePoints[3];
