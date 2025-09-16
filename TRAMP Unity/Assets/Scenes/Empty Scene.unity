@@ -152,6 +152,10 @@ MonoBehaviour:
   Isolevel: 0
   Case: 0
   Depth: 10
+  lerpSpeed: 0.155
+  interpolate: 0
+  truncate: 0
+  randomVertexColoring: 0
   material: {fileID: 2100000, guid: c335867c5b2f71cbf80a9bcde404be07, type: 2}
   computeShader: {fileID: 7200000, guid: 84871cf6cf7353001ab0ff55e1692417, type: 3}
   bounds:
@@ -248,8 +252,8 @@ MonoBehaviour:
   runSpeed: 12
   jumpPower: 7
   gravity: 0
-  lookSpeed: 2
-  lookXLimit: 45
+  lookSpeed: 5
+  lookXLimit: 70
   canMove: 1
   characterController: {fileID: 193182898}
 --- !u!1001 &699484878
@@ -261,8 +265,20 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: Case
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: Depth
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: lerpSpeed
+      value: 0.155
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: randomVertexColoring
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7463749026619433660, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: m_LocalScale.y
@@ -474,6 +490,10 @@ MonoBehaviour:
   Isolevel: 0
   Case: 0
   Depth: 10
+  lerpSpeed: 0
+  interpolate: 0
+  truncate: 0
+  randomVertexColoring: 0
   material: {fileID: 2100000, guid: c335867c5b2f71cbf80a9bcde404be07, type: 2}
   computeShader: {fileID: 7200000, guid: 4773564d4505d9a5f9ccf15b70927bc2, type: 3}
   bounds:
@@ -530,7 +550,7 @@ Camera:
   m_GameObject: {fileID: 1831202993}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2

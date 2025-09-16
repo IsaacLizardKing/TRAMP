@@ -4,14 +4,21 @@ using UnityEngine.Rendering;
 
 public class ExperimentComputeMesh : MonoBehaviour
 {
-    [Range(-1f, 10f)]
+    [Range(-10f, 10f)]
     public float Isolevel;
 
     [Range(0, 31)] 
     public int Case;
 
-    [Range(0, 10)] 
+    [Range(0, 100)] 
     public int Depth;
+
+    [Range(0.0000000000000001f, 1)]
+    public float lerpSpeed;
+
+    [SerializeField] bool interpolate;
+    [SerializeField] bool truncate;
+    [SerializeField] bool randomVertexColoring;
 
 
     [StructLayout(LayoutKind.Sequential)]
@@ -36,8 +43,8 @@ public class ExperimentComputeMesh : MonoBehaviour
     GraphicsBuffer vertexBuffer;
     float simulationTime;
 
-    const int vertexCount = 4608;
-    const int indexCount  = 4608;
+    private int vertexCount = 4608;
+    private int indexCount  = 4608;
 
     void Start()
     {
@@ -72,10 +79,20 @@ public class ExperimentComputeMesh : MonoBehaviour
         computeShader.GetKernelThreadGroupSizes(kernel, out var x, out _, out _);
         var groups = (indexCount + (int)x - 1) / (int)x;
 
+        if(Depth * 32 * 9 != vertexCount) {
+            mesh = CreateMesh();
+            var meshFilter = this.gameObject.GetComponent<MeshFilter>();
+            meshFilter.mesh = mesh;
+            indexBuffer = mesh.GetIndexBuffer();
+            vertexBuffer = mesh.GetVertexBuffer(0);
+        }
+
         computeShader.SetFloat("Time", simulationTime);
         computeShader.SetFloat("Isolevel", Isolevel);
+        computeShader.SetFloat("lerpSpeed", lerpSpeed);
         computeShader.SetInt("Case", Case);
         computeShader.SetInt("Depth", Depth);
+        computeShader.SetInt("Settings", (interpolate ? 1 : 0) | (truncate ? 2 : 0) | (randomVertexColoring ? 4 : 0));
         computeShader.SetVector("offset", this.transform.position);
         computeShader.SetBuffer(kernel, "IndexBuffer", indexBuffer);
         computeShader.SetBuffer(kernel, "VertexBuffer", vertexBuffer);
@@ -89,6 +106,8 @@ public class ExperimentComputeMesh : MonoBehaviour
 
     Mesh CreateMesh()
     {
+        vertexCount = Depth * 32 * 9;
+        indexCount = Depth * 32 * 9;
         var mesh = new Mesh();
         mesh.name = "TestComputeMesh";
 

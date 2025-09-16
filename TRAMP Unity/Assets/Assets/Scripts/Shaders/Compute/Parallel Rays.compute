@@ -41,7 +41,7 @@ static const int triTable[288] = {
 static const int edgeTable[18] = {
     0, 2, // 0
     0, 3, // 1
-    2, 5, // 2
+    5, 2, // 2
     3, 5, // 3
     0, 1, // 4
     1, 2, // 5
@@ -59,10 +59,10 @@ struct Vertex {
 
 float Time;
 float Isolevel;
-
+int Settings;
 int Case;
-int Depth = 8;
-
+int Depth;
+float lerpSpeed;
 float3 offset;
 
 RWStructuredBuffer<uint> IndexBuffer;
@@ -75,7 +75,7 @@ float Sample (float3 pos, float time) {
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
     float d = sqrt(x * x + y * y + z * z);
-    return sin(x) * sin(y) * sin(z);
+    return -y - z;//sin(d) + sin(x) - sin(y) - y;
 }
 
 
@@ -85,8 +85,8 @@ float3 interpolateVertex(uint lookup, float3 ps[6], float ws[6]) {
     if (edge != -1) {
         float3 p1 = ps[edgeTable[edge * 2]];
         float3 p2 = ps[edgeTable[edge * 2 + 1]];
-        float t = (Isolevel - ws[edgeTable[edge * 2]]) / (ws[edgeTable[edge * 2 + 1]] -  ws[edgeTable[edge * 2]]);
-        float3 p3 = float3(p1.x + t * (p2.x - p1.x), p1.y + t * (p2.y - p1.y), p1.z + t * (p2.z - p1.z));
+        float t = sin(Time) * sin(Time) * 0.5 + cos(Time) * cos(Time) * ((Isolevel - ws[edgeTable[edge * 2]]) / (ws[edgeTable[edge * 2 + 1]] - ws[edgeTable[edge * 2]]));
+        float3 p3 = p1 + t * (p2 - p1);
 
         return p3;
     } else {
@@ -102,7 +102,7 @@ float3 calculateFaceNormals(float3 p1, float3 p2, float3 p3) {
 }
 
 
-[numthreads(20,1,1)]
+[numthreads(32,1,1)]
 void CSMain (uint id : SV_DispatchThreadID) {
     
     uint vOffset = id.x * 3;
@@ -136,9 +136,9 @@ void CSMain (uint id : SV_DispatchThreadID) {
     for(int i = 0; i < Depth; i++) {
         if((ws[0] > Isolevel) & lookup != lookup) lookup = !lookup & 63;
         lookup >> 3;
-        samplePoints[0] = samplePoints[3];
-        samplePoints[1] = samplePoints[4];
-        samplePoints[2] = samplePoints[5];
+        samplePoints[0] = float3(samplePoints[3].x, samplePoints[3].y, samplePoints[3].z);
+        samplePoints[1] = float3(samplePoints[4].x, samplePoints[4].y, samplePoints[4].z);
+        samplePoints[2] = float3(samplePoints[5].x, samplePoints[5].y, samplePoints[5].z);
         samplePoints[3] = v1 * (i + 1);
         samplePoints[4] = v2 * (i + 1);
         samplePoints[5] = v3 * (i + 1);
@@ -154,27 +154,28 @@ void CSMain (uint id : SV_DispatchThreadID) {
         if (lookup > 31) lookup = !lookup & 63;
         if (Case != 0) lookup = Case;
         lookup *= 9;
-        VertexBuffer[0 + i * 9 + vOffset].pos -= (VertexBuffer[0 + i * 9 + vOffset].pos - interpolateVertex(lookup,  samplePoints, ws)) * 1;
-        VertexBuffer[1 + i * 9 + vOffset].pos -= (VertexBuffer[1 + i * 9 + vOffset].pos - interpolateVertex(lookup + 2, samplePoints, ws)) * 1;
-        VertexBuffer[2 + i * 9 + vOffset].pos -= (VertexBuffer[2 + i * 9 + vOffset].pos - interpolateVertex(lookup + 1, samplePoints, ws)) * 1;
-        VertexBuffer[3 + i * 9 + vOffset].pos -= (VertexBuffer[3 + i * 9 + vOffset].pos - interpolateVertex(lookup + 3, samplePoints, ws)) * 1;
-        VertexBuffer[4 + i * 9 + vOffset].pos -= (VertexBuffer[4 + i * 9 + vOffset].pos - interpolateVertex(lookup + 5, samplePoints, ws)) * 1;
-        VertexBuffer[5 + i * 9 + vOffset].pos -= (VertexBuffer[5 + i * 9 + vOffset].pos - interpolateVertex(lookup + 4, samplePoints, ws)) * 1;
-        VertexBuffer[6 + i * 9 + vOffset].pos -= (VertexBuffer[6 + i * 9 + vOffset].pos - interpolateVertex(lookup + 6, samplePoints, ws)) * 1;
-        VertexBuffer[7 + i * 9 + vOffset].pos -= (VertexBuffer[7 + i * 9 + vOffset].pos - interpolateVertex(lookup + 8, samplePoints, ws)) * 1;
-        VertexBuffer[8 + i * 9 + vOffset].pos -= (VertexBuffer[8 + i * 9 + vOffset].pos - interpolateVertex(lookup + 7, samplePoints, ws)) * 1;
+        VertexBuffer[0 + i * 9 + vOffset].pos -= (VertexBuffer[0 + i * 9 + vOffset].pos - interpolateVertex(lookup,  samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[1 + i * 9 + vOffset].pos -= (VertexBuffer[1 + i * 9 + vOffset].pos - interpolateVertex(lookup + 2, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[2 + i * 9 + vOffset].pos -= (VertexBuffer[2 + i * 9 + vOffset].pos - interpolateVertex(lookup + 1, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[3 + i * 9 + vOffset].pos -= (VertexBuffer[3 + i * 9 + vOffset].pos - interpolateVertex(lookup + 3, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[4 + i * 9 + vOffset].pos -= (VertexBuffer[4 + i * 9 + vOffset].pos - interpolateVertex(lookup + 5, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[5 + i * 9 + vOffset].pos -= (VertexBuffer[5 + i * 9 + vOffset].pos - interpolateVertex(lookup + 4, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[6 + i * 9 + vOffset].pos -= (VertexBuffer[6 + i * 9 + vOffset].pos - interpolateVertex(lookup + 6, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[7 + i * 9 + vOffset].pos -= (VertexBuffer[7 + i * 9 + vOffset].pos - interpolateVertex(lookup + 8, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[8 + i * 9 + vOffset].pos -= (VertexBuffer[8 + i * 9 + vOffset].pos - interpolateVertex(lookup + 7, samplePoints, ws)) * lerpSpeed;
         float3 normal1 = calculateFaceNormals(VertexBuffer[0 + i * 9 + vOffset].pos, VertexBuffer[1 + i * 9 + vOffset].pos, VertexBuffer[2 + i * 9 + vOffset].pos);
-        VertexBuffer[0 + i * 9 + vOffset].norm = normal1;
+        VertexBuffer[0 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[0] * ((Settings & 4) >> 2));
         VertexBuffer[1 + i * 9 + vOffset].norm = normal1;
-        VertexBuffer[2 + i * 9 + vOffset].norm = normal1;
+        VertexBuffer[2 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[1] * ((Settings & 4) >> 2));
         normal1 = calculateFaceNormals(VertexBuffer[3 + i * 9 + vOffset].pos, VertexBuffer[4 + i * 9 + vOffset].pos, VertexBuffer[5 + i * 9 + vOffset].pos);
-        VertexBuffer[3 + i * 9 + vOffset].norm = normal1;
+        VertexBuffer[3 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[2] * ((Settings & 4) >> 2));
         VertexBuffer[4 + i * 9 + vOffset].norm = normal1;
-        VertexBuffer[5 + i * 9 + vOffset].norm = normal1;
+        VertexBuffer[5 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[3] * ((Settings & 4) >> 2));
         normal1 = calculateFaceNormals(VertexBuffer[6 + i * 9 + vOffset].pos, VertexBuffer[7 + i * 9 + vOffset].pos, VertexBuffer[8 + i * 9 + vOffset].pos);
-        VertexBuffer[6 + i * 9 + vOffset].norm = normal1;
+        VertexBuffer[6 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[4] * ((Settings & 4) >> 2));
         VertexBuffer[7 + i * 9 + vOffset].norm = normal1;
-        VertexBuffer[8 + i * 9 + vOffset].norm = normal1;
+        VertexBuffer[8 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[5] * ((Settings & 4) >> 2));
         lookup /= 9;
+        //if((lookup == 7) && ((Settings & 2) == 2)) {v1 = float3(0, 1, 0); v2 = v1; v3 = v1; samplePoints[3] = v1; samplePoints[4] = v1; samplePoints[5] = v1;}
     }
 }
