@@ -75,7 +75,7 @@ float Sample (float3 pos, float time) {
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
     float d = sqrt(x * x + y * y + z * z);
-    return -y - z;//sin(d) + sin(x) - sin(y) - y;
+    return sin(d) + sin(x) - sin(y) - y;
 }
 
 
@@ -85,7 +85,7 @@ float3 interpolateVertex(uint lookup, float3 ps[6], float ws[6]) {
     if (edge != -1) {
         float3 p1 = ps[edgeTable[edge * 2]];
         float3 p2 = ps[edgeTable[edge * 2 + 1]];
-        float t = sin(Time) * sin(Time) * 0.5 + cos(Time) * cos(Time) * ((Isolevel - ws[edgeTable[edge * 2]]) / (ws[edgeTable[edge * 2 + 1]] - ws[edgeTable[edge * 2]]));
+        float t = 0.5; //sin(Time) * sin(Time) * 0.5 + cos(Time) * cos(Time) * ((Isolevel - ws[edgeTable[edge * 2]]) / (ws[edgeTable[edge * 2 + 1]] - ws[edgeTable[edge * 2]]));
         float3 p3 = p1 + t * (p2 - p1);
 
         return p3;

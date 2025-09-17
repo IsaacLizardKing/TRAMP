@@ -16,6 +16,11 @@ public class ExperimentComputeMesh : MonoBehaviour
     [Range(0.0000000000000001f, 1)]
     public float lerpSpeed;
 
+    [Range(0, 10f)]
+    public float gizmosCooldown;
+    float gizmosTime;
+    
+
     [SerializeField] bool interpolate;
     [SerializeField] bool truncate;
     [SerializeField] bool randomVertexColoring;
@@ -32,6 +37,10 @@ public class ExperimentComputeMesh : MonoBehaviour
 
     GraphicsBuffer rays; 
     GraphicsBuffer raysIndexes;
+    Vector3[] raysCPU; 
+    int[] raysIndexesCPU;
+    
+    
 
     [SerializeField] Material material;
     [SerializeField] ComputeShader computeShader;
@@ -163,6 +172,7 @@ public class ExperimentComputeMesh : MonoBehaviour
 
         var initialRays = new Vertex[12];
         for(int i = 0; i < 12; i++) {
+            initalRays[i].Normalize();
             initialRays[i] = new Vertex { position = initalRays[i], normal = new Vector3(0f, 0f, -1f), color = Vector4.zero, uv0 = new Vector2(0, 0) };
         }
 
@@ -230,5 +240,46 @@ public class ExperimentComputeMesh : MonoBehaviour
 
         rays = Wesh.GetVertexBuffer(0);
         raysIndexes = Wesh.GetIndexBuffer();
+        raysCPU = initalRays;
+        raysIndexesCPU = initialRaysIndexes;
+    }
+
+    float Sample(Vector3 pos) {
+
+    float x = pos.x;
+    float y = pos.y;
+    float z = pos.z;
+    float d = Mathf.Sqrt(x * x + y * y + z * z);
+        return Mathf.Sin(d) + Mathf.Sin(x) - Mathf.Sin(y) - y;
+    }
+
+    void OnDrawGizmos() {
+        makeDaRays();
+        Vector3 offset = this.gameObject.transform.position;
+        Gizmos.color = new Color(0.75f, 0.75f, 0.0f, 0.75f);
+        for(int i = 0; i < 12; i++) {
+            Gizmos.DrawRay(offset, offset + raysCPU[i] * Depth);
+        }
+        Gizmos.color = new Color (1f, 1f, 1f, 0.75f);
+        for(int i = 0; i <= Depth; i++) {
+            for(int j = 0; j < 20; j++) {
+                float scale = i > 0 ? i : 0.05f;
+                Gizmos.DrawLine(offset + raysCPU[raysIndexesCPU[j * 3]] * scale, offset + raysCPU[raysIndexesCPU[j * 3 + 1]] * scale);
+                Gizmos.DrawLine(offset + raysCPU[raysIndexesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndexesCPU[j * 3 + 1]] * scale);
+                Gizmos.DrawLine(offset + raysCPU[raysIndexesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndexesCPU[j * 3]] * scale);
+            }
+        }
+        Color green = new Color(0f, 1f, 0f, 0.75f);
+        Color red = new Color(1f, 0f, 0f, 0.75f);
+        for(int i = 0; i <= Depth; i++) {
+            for(int j = 0; j < 12; j++) {
+                float scale = i > 0 ? i : 0.05f;
+                float size = Sample(raysCPU[j] * scale) / Isolevel;
+                if(size >= 1f) { Gizmos.color = green; } 
+                else { Gizmos.color = red; }
+                size = Mathf.Clamp(size, 0.2f, 0.3f);
+                Gizmos.DrawCube(offset + raysCPU[j] * scale, new Vector3(size, size, size));
+            }
+        }
     }
 }
