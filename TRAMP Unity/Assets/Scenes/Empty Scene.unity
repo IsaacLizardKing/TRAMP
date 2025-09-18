@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76f91c03322786296b2ea56c7bdf7e4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Isolevel: 3.95
+  Isolevel: 3.68
   Case: 0
   Depth: 10
   lerpSpeed: 0.155
@@ -275,11 +275,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: Isolevel
-      value: 3.95
+      value: 3.68
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: truncate
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: lerpSpeed
       value: 0.155
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: interpolate
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: gizmosCooldown
@@ -483,7 +491,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &837526063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -499,13 +507,13 @@ MonoBehaviour:
   Isolevel: 0
   Case: 0
   Depth: 10
-  lerpSpeed: 0
+  lerpSpeed: 1e-16
   gizmosCooldown: 0
   interpolate: 0
   truncate: 0
   randomVertexColoring: 0
   material: {fileID: 2100000, guid: c335867c5b2f71cbf80a9bcde404be07, type: 2}
-  computeShader: {fileID: 7200000, guid: 4773564d4505d9a5f9ccf15b70927bc2, type: 3}
+  computeShader: {fileID: 7200000, guid: 96b605a1d7523bb45a1c5621e4c07e34, type: 3}
   bounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 500, y: 500, z: 500}

@@ -7,7 +7,7 @@ public class ExperimentComputeMesh : MonoBehaviour
     [Range(-10f, 10f)]
     public float Isolevel;
 
-    [Range(0, 31)] 
+    [Range(0, 32)] 
     public int Case;
 
     [Range(0, 100)] 
@@ -246,40 +246,49 @@ public class ExperimentComputeMesh : MonoBehaviour
 
     float Sample(Vector3 pos) {
 
-    float x = pos.x;
-    float y = pos.y;
-    float z = pos.z;
-    float d = Mathf.Sqrt(x * x + y * y + z * z);
-        return Mathf.Sin(d) + Mathf.Sin(x) - Mathf.Sin(y) - y;
+        float x = pos.x;
+        float y = pos.y;
+        float z = pos.z;
+        float d = Mathf.Sqrt(x * x + y * y + z * z);
+        return -y - z;//Mathf.Sin(d) + Mathf.Sin(x) - Mathf.Sin(y) - y;
     }
 
-    void OnDrawGizmos() {
+    float Magnitude(Vector3 pos) {
+        float x = pos.x;
+        float y = pos.y;
+        float z = pos.z;
+        return Mathf.Sqrt(x * x + y * y + z * z);
+    }
+
+    void OnDrawGizmosSelected() {
         makeDaRays();
         Vector3 offset = this.gameObject.transform.position;
-        Gizmos.color = new Color(0.75f, 0.75f, 0.0f, 0.75f);
-        for(int i = 0; i < 12; i++) {
-            Gizmos.DrawRay(offset, offset + raysCPU[i] * Depth);
-        }
         Gizmos.color = new Color (1f, 1f, 1f, 0.75f);
+        float scale = 0.1f;
         for(int i = 0; i <= Depth; i++) {
             for(int j = 0; j < 20; j++) {
-                float scale = i > 0 ? i : 0.05f;
                 Gizmos.DrawLine(offset + raysCPU[raysIndexesCPU[j * 3]] * scale, offset + raysCPU[raysIndexesCPU[j * 3 + 1]] * scale);
                 Gizmos.DrawLine(offset + raysCPU[raysIndexesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndexesCPU[j * 3 + 1]] * scale);
                 Gizmos.DrawLine(offset + raysCPU[raysIndexesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndexesCPU[j * 3]] * scale);
             }
+            scale += Magnitude(raysCPU[0] * scale - raysCPU[1] * scale);
+        }
+        Gizmos.color = new Color(0.75f, 0.75f, 0.0f, 0.75f);
+        for(int i = 0; i < 12; i++) {
+            Gizmos.DrawRay(offset, offset + raysCPU[i] * Depth * 100);
         }
         Color green = new Color(0f, 1f, 0f, 0.75f);
         Color red = new Color(1f, 0f, 0f, 0.75f);
-        for(int i = 0; i <= Depth; i++) {
+        scale = 0.05f;
+        for(int i = 0; i <= Depth + 1; i++) {
             for(int j = 0; j < 12; j++) {
-                float scale = i > 0 ? i : 0.05f;
                 float size = Sample(raysCPU[j] * scale) / Isolevel;
                 if(size >= 1f) { Gizmos.color = green; } 
                 else { Gizmos.color = red; }
-                size = Mathf.Clamp(size, 0.2f, 0.3f);
+                size = Mathf.Clamp(size, 0.2f, 0.3f) * Mathf.Sqrt(scale);
                 Gizmos.DrawCube(offset + raysCPU[j] * scale, new Vector3(size, size, size));
             }
+            scale += Magnitude(raysCPU[0] * scale - raysCPU[1] * scale);
         }
     }
 }
