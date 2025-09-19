@@ -75,8 +75,8 @@ float Sample (float3 pos, float time) {
     float x = pos.x + offset.x;
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
-    //float d = sqrt(x * x + y * y + z * z);
-    return sin(x) * sin(y) * sin(z);
+    float d = sqrt(x * x + y * y + z * z);
+    return sin(d) - sin(y) + sin(z);
 }
 
 float Magnitude (float3 pos) {
