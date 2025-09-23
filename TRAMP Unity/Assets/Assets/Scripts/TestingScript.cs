@@ -250,7 +250,7 @@ public class ExperimentComputeMesh : MonoBehaviour
         float y = pos.y;
         float z = pos.z;
         float d = Mathf.Sqrt(x * x + y * y + z * z);
-        return -y - z;//Mathf.Sin(d) + Mathf.Sin(x) - Mathf.Sin(y) - y;
+        return Mathf.Sin(d) + Mathf.Sin(x) - Mathf.Sin(y);
     }
 
     float Magnitude(Vector3 pos) {

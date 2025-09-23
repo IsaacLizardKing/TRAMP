@@ -22,8 +22,8 @@ public class SampleComputeMesh : MonoBehaviour
     GraphicsBuffer vertexBuffer;
     float simulationTime;
 
-    const int vertexCount = 6;
-    const int indexCount = 6;
+    const int vertexCount = 3;
+    const int indexCount = 3;
 
     void Start()
     {
@@ -86,15 +86,12 @@ public class SampleComputeMesh : MonoBehaviour
         var initialVertices = new Vertex[vertexCount] {
             new Vertex { position = new Vector3(0f, 0f, 0f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one, uv0 = new Vector2(0, 0) },
             new Vertex { position = new Vector3(1f, 1f, 0f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(1f, 0f, 0f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(1f, 1f, 0f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one / 2, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0f, 0f, 0f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one / 2, uv0 = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(0f, 1f, 0f), normal = new Vector3(0f, 0f, 1f), color = Vector4.one, uv0 = new Vector2(0, 0) }
+            new Vertex { position = new Vector3(1f, 0f, 0f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one, uv0 = new Vector2(0, 0) }
         };
         mesh.SetVertexBufferData(initialVertices, 0, 0, vertexCount);
 
         mesh.SetIndexBufferParams(indexCount, IndexFormat.UInt32);
-        var indices = new int[indexCount] { 0, 1, 2, 3, 4, 5 }; 
+        var indices = new int[indexCount] { 0, 1, 2 }; 
         mesh.SetIndexBufferData(indices, 0, 0, indexCount);
 
         mesh.subMeshCount = 1;
@@ -105,3 +102,6 @@ public class SampleComputeMesh : MonoBehaviour
         return mesh;
     }
 }
+
+// https://discussions.unity.com/t/rendering-directly-from-compute-buffers/1559466/5
+// From Arithmetica

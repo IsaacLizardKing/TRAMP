@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76f91c03322786296b2ea56c7bdf7e4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Isolevel: 0
+  Isolevel: 0.5
   Case: 0
   Depth: 19
   lerpSpeed: 1
@@ -275,7 +275,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: Isolevel
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: truncate
