@@ -24,6 +24,8 @@ public class ExperimentComputeMesh : MonoBehaviour
     [SerializeField] bool interpolate;
     [SerializeField] bool truncate;
     [SerializeField] bool randomVertexColoring;
+    [SerializeField] bool volumeRules;
+    [SerializeField] bool facingRules;
 
 
     [StructLayout(LayoutKind.Sequential)]
@@ -101,7 +103,7 @@ public class ExperimentComputeMesh : MonoBehaviour
         computeShader.SetFloat("lerpSpeed", lerpSpeed);
         computeShader.SetInt("Case", Case);
         computeShader.SetInt("Depth", Depth);
-        computeShader.SetInt("Settings", (interpolate ? 1 : 0) | (truncate ? 2 : 0) | (randomVertexColoring ? 4 : 0));
+        computeShader.SetInt("Settings", (interpolate ? 1 : 0) | (truncate ? 2 : 0) | (randomVertexColoring ? 4 : 0) | (volumeRules ? 8 : 0) | (facingRules ? 16 : 0));
         computeShader.SetVector("offset", this.transform.position);
         computeShader.SetBuffer(kernel, "IndexBuffer", indexBuffer);
         computeShader.SetBuffer(kernel, "VertexBuffer", vertexBuffer);
@@ -250,7 +252,7 @@ public class ExperimentComputeMesh : MonoBehaviour
         float y = pos.y;
         float z = pos.z;
         float d = Mathf.Sqrt(x * x + y * y + z * z);
-        return Mathf.Sin(d) + Mathf.Sin(x) - Mathf.Sin(y);
+        return Mathf.Sin(d) - Mathf.Sin(x) + Mathf.Sin(y) - y * 0.01f;
     }
 
     float Magnitude(Vector3 pos) {
@@ -279,13 +281,13 @@ public class ExperimentComputeMesh : MonoBehaviour
         }
         Color green = new Color(0f, 1f, 0f, 0.75f);
         Color red = new Color(1f, 0f, 0f, 0.75f);
-        scale = 0.05f;
-        for(int i = 0; i <= Depth + 1; i++) {
+        scale = 0.1f;
+        for(int i = 0; i <= Depth; i++) {
             for(int j = 0; j < 12; j++) {
                 float size = Sample(raysCPU[j] * scale) / Isolevel;
                 if(size >= 1f) { Gizmos.color = green; } 
                 else { Gizmos.color = red; }
-                size = Mathf.Clamp(size, 0.2f, 0.3f) * Mathf.Sqrt(scale);
+                size = Mathf.Min(0.2f * scale, 10f);
                 Gizmos.DrawCube(offset + raysCPU[j] * scale, new Vector3(size, size, size));
             }
             scale += Magnitude(raysCPU[0] * scale - raysCPU[1] * scale);

@@ -15,29 +15,30 @@ static const int triTable[297] = {
      1,  6,  3, -1, -1, -1, -1, -1, -1,   // 8
      0,  4,  6,  0,  6,  3, -1, -1, -1,   // 9
      1,  6,  3,  4,  5,  8, -1, -1, -1,   // 10
-     0,  5,  3,  5,  8,  3,  6,  8,  3,   // 11
-     1,  6,  3,  0,  5,  2, -1, -1, -1,   // 12
-     2,  4,  6,  2,  3,  6,  5,  4,  2,   // 13
-     0,  4,  2,  2,  4,  8,  1,  6,  3,   // 14
-     2,  3,  8,  6,  3,  8, -1, -1, -1,   // 15
+     0,  5,  3,  5,  8,  3,  6,  3,  8,   // 11
+     1,  6,  3,  0,  2,  5, -1, -1, -1,   // 12
+     2,  4,  6,  2,  6,  3,  5,  4,  2,   // 13
+     0,  2,  4,  2,  8,  4,  1,  6,  3,   // 14
+     2,  8,  3,  6,  3,  8, -1, -1, -1,   // 15
      6,  8,  7, -1, -1, -1, -1, -1, -1,   // 16
-     6,  8,  7,  0,  1,  4, -1, -1, -1,   // 17
-     4,  6,  5,  5,  6,  7, -1, -1, -1,   // 18
-     5,  6,  7,  1,  5,  0,  5,  1,  6,   // 19
-     0,  5,  2,  6,  8,  7, -1, -1, -1,   // 20
-     4,  5,  1,  2,  1,  5,  6,  8,  7,   // 21
-     0,  4,  6,  0,  6,  2,  6,  7,  2,   // 22
-     1,  6,  2,  2,  6,  7, -1, -1, -1,   // 23
+     6,  8,  7,  0,  4,  1, -1, -1, -1,   // 17
+     4,  5,  6,  5,  7,  6, -1, -1, -1,   // 18
+     5,  7,  6,  1,  0,  5,  5,  6,  1,   // 19
+     0,  2,  5,  6,  8,  7, -1, -1, -1,   // 20
+     4,  1,  5,  2,  5,  1,  6,  8,  7,   // 21
+     0,  6,  4,  0,  2,  6,  6,  2,  7,   // 22
+     1,  2,  6,  2,  7,  6, -1, -1, -1,   // 23
      1,  8,  7,  1,  7,  3, -1, -1, -1,   // 24
      0,  4,  8,  8,  7,  3,  0,  8,  3,   // 25
      4,  5,  1,  1,  5,  3,  3,  5,  7,   // 26
-     0,  5,  3,  5,  3,  7, -1, -1, -1,   // 27
-     1,  8,  7,  1,  7,  3,  0,  5,  2,   // 28
-     4,  8,  5,  2,  3,  7, -1, -1, -1,   // 29
-     0,  1,  4,  2,  3,  7, -1, -1, -1,   // 30
-     2,  3,  7, -1, -1, -1, -1, -1, -1,   // 31
+     0,  5,  3,  5,  7,  3, -1, -1, -1,   // 27
+     1,  8,  7,  1,  7,  3,  0,  2,  5,   // 28
+     4,  8,  5,  2,  7,  3, -1, -1, -1,   // 29
+     0,  1,  4,  2,  7,  3, -1, -1, -1,   // 30
+     2,  7,  3, -1, -1, -1, -1, -1, -1,   // 31
      2,  3,  7, -1, -1, -1, -1, -1, -1    // 32
     };
+
 
 static const int edgeTable[18] = {
     0, 2, // 0
@@ -76,7 +77,7 @@ float Sample (float3 pos, float time) {
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
     float d = sqrt(x * x + y * y + z * z);
-    return sin(d) - sin(y) + sin(z) - y * 0.01;
+    return y - sin(z); //sin(d) - sin(y) + sin(z) - y * 0.01;
 }
 
 float Magnitude (float3 pos) {
@@ -113,7 +114,6 @@ float3 calculateFaceNormals(float3 p1, float3 p2, float3 p3) {
 
 [numthreads(20,1,1)]
 void CSMain (uint id : SV_DispatchThreadID) {
-    
     uint vOffset = id.x * 3;
     uint a = raysIndexes[vOffset];
     uint b = raysIndexes[vOffset + 1];
@@ -143,35 +143,37 @@ void CSMain (uint id : SV_DispatchThreadID) {
         Sample(samplePoints[2], Time), 
     };
 
+    bool inside = Sample(offset, Time) > Isolevel;
 
-    /*uint lookup = 0;
+    uint lookup = 0;
     if (ws[3] > Isolevel) lookup |= 8;
     if (ws[4] > Isolevel) lookup |= 16;
-    if (ws[5] > Isolevel) lookup |= 32;*/
+    if (ws[5] > Isolevel) lookup |= 32;
 
     for(int i = 0; i < Depth; i++) {
-        //if((ws[0] > Isolevel) && lookup | 1 != lookup) lookup = !lookup & 63;
-        uint lookup = 0; //>> 3;
-        samplePoints[0] = float3(samplePoints[3].x, samplePoints[3].y, samplePoints[3].z);
-        samplePoints[1] = float3(samplePoints[4].x, samplePoints[4].y, samplePoints[4].z);
-        samplePoints[2] = float3(samplePoints[5].x, samplePoints[5].y, samplePoints[5].z);
+        lookup = lookup >> 3;
+        bool inverted = false;
+        samplePoints[0] = samplePoints[3];
+        samplePoints[1] = samplePoints[4];
+        samplePoints[2] = samplePoints[5];
         float projectionDistance = Magnitude(samplePoints[0]) + Magnitude(samplePoints[0] - samplePoints[1]);
         samplePoints[3] = v1 * projectionDistance;
         samplePoints[4] = v2 * projectionDistance;
         samplePoints[5] = v3 * projectionDistance;
-        ws[0] = Sample(samplePoints[0], Time); //ws[3];
-        ws[1] = Sample(samplePoints[1], Time); //ws[4];
-        ws[2] = Sample(samplePoints[2], Time); //ws[5];
+        ws[0] = Sample(samplePoints[0], Time);
+        ws[1] = Sample(samplePoints[1], Time);
+        ws[2] = Sample(samplePoints[2], Time);
         ws[3] = Sample(samplePoints[3], Time);
         ws[4] = Sample(samplePoints[4], Time);
         ws[5] = Sample(samplePoints[5], Time);
+        
         if(ws[0] > Isolevel) lookup |= 1;
         if(ws[1] > Isolevel) lookup |= 2;
         if(ws[2] > Isolevel) lookup |= 4;
         if(ws[3] > Isolevel) lookup |= 8;
         if(ws[4] > Isolevel) lookup |= 16;
         if(ws[5] > Isolevel) lookup |= 32;
-        if (lookup > 32) lookup = 63 - lookup;
+        if (lookup > 32) { lookup = 63 - lookup; inverted = true; }
         if (Case != 0) lookup = Case;
         lookup *= 9;
         VertexBuffer[0 + i * 9 + vOffset].pos -= (VertexBuffer[0 + i * 9 + vOffset].pos - interpolateVertex(lookup,  samplePoints, ws)) * lerpSpeed;
@@ -185,37 +187,63 @@ void CSMain (uint id : SV_DispatchThreadID) {
         VertexBuffer[8 + i * 9 + vOffset].pos -= (VertexBuffer[8 + i * 9 + vOffset].pos - interpolateVertex(lookup + 8, samplePoints, ws)) * lerpSpeed;
         
         
-        float3 normal1 = calculateFaceNormals(VertexBuffer[IndexBuffer[0 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[1 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[2 + i * 9 + vOffset]].pos);
-        float3 center = (VertexBuffer[0 + i * 9 + vOffset].pos + VertexBuffer[1 + i * 9 + vOffset].pos + VertexBuffer[2 + i * 9 + vOffset].pos) / 3;
-        if(Magnitude(center + normal1) > Magnitude(center - normal1)) {
-            float a = IndexBuffer[0 + i * 9 + vOffset];
+        bool InvertedYet = IndexBuffer[0 + i * 9 + vOffset] > IndexBuffer[1 + i * 9 + vOffset];
+        if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {
+            uint a = IndexBuffer[0 + i * 9 + vOffset];
             IndexBuffer[0 + i * 9 + vOffset] = IndexBuffer[1 + i * 9 + vOffset];
             IndexBuffer[1 + i * 9 + vOffset] = a;
         }
+        float3 center = (VertexBuffer[0 + i * 9 + vOffset].pos + VertexBuffer[1 + i * 9 + vOffset].pos + VertexBuffer[2 + i * 9 + vOffset].pos) / 3;
+        float3 normal1 = calculateFaceNormals(VertexBuffer[IndexBuffer[0 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[1 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[2 + i * 9 + vOffset]].pos);
+        if((Settings & 16) == 16 && Magnitude(center + normal1) > Magnitude(center - normal1)) {
+            float a = IndexBuffer[0 + i * 9 + vOffset];
+            IndexBuffer[0 + i * 9 + vOffset] = IndexBuffer[1 + i * 9 + vOffset];
+            IndexBuffer[1 + i * 9 + vOffset] = a;
+            normal1 = -normal1;
+        }
+
         VertexBuffer[0 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[0] * ((Settings & 4) >> 2));
         VertexBuffer[1 + i * 9 + vOffset].norm = normal1;
         VertexBuffer[2 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[1] * ((Settings & 4) >> 2));
-    
-        center = (VertexBuffer[3 + i * 9 + vOffset].pos + VertexBuffer[4 + i * 9 + vOffset].pos + VertexBuffer[5 + i * 9 + vOffset].pos) / 3;
-        normal1 = calculateFaceNormals(VertexBuffer[IndexBuffer[3 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[4 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[5 + i * 9 + vOffset]].pos);
-        if(Magnitude(center + normal1) > Magnitude(center - normal1)) {
-            float a = IndexBuffer[3 + i * 9 + vOffset];
+
+        InvertedYet = IndexBuffer[3 + i * 9 + vOffset] > IndexBuffer[4 + i * 9 + vOffset];
+        if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {
+            uint a = IndexBuffer[3 + i * 9 + vOffset];
             IndexBuffer[3 + i * 9 + vOffset] = IndexBuffer[4 + i * 9 + vOffset];
             IndexBuffer[4 + i * 9 + vOffset] = a;
         }
+        center = (VertexBuffer[3 + i * 9 + vOffset].pos + VertexBuffer[4 + i * 9 + vOffset].pos + VertexBuffer[5 + i * 9 + vOffset].pos) / 3;
+        normal1 = calculateFaceNormals(VertexBuffer[IndexBuffer[3 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[4 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[5 + i * 9 + vOffset]].pos);
+        if((Settings & 16) == 16 && Magnitude(center + normal1) > Magnitude(center - normal1)) {
+            float a = IndexBuffer[3 + i * 9 + vOffset];
+            IndexBuffer[3 + i * 9 + vOffset] = IndexBuffer[4 + i * 9 + vOffset];
+            IndexBuffer[4 + i * 9 + vOffset] = a;
+            normal1 = -normal1;
+        }
+
         VertexBuffer[3 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[2] * ((Settings & 4) >> 2));
         VertexBuffer[4 + i * 9 + vOffset].norm = normal1;
         VertexBuffer[5 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[3] * ((Settings & 4) >> 2));
-        normal1 = calculateFaceNormals(VertexBuffer[IndexBuffer[6 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[7 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[8 + i * 9 + vOffset]].pos);
-        if(Magnitude(center + normal1) > Magnitude(center - normal1)) {
+        InvertedYet = IndexBuffer[6 + i * 9 + vOffset] > IndexBuffer[7 + i * 9 + vOffset];
+        if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {
             float a = IndexBuffer[6 + i * 9 + vOffset];
             IndexBuffer[6 + i * 9 + vOffset] = IndexBuffer[7 + i * 9 + vOffset];
             IndexBuffer[7 + i * 9 + vOffset] = a;
         }
+        center = (VertexBuffer[6 + i * 9 + vOffset].pos + VertexBuffer[7 + i * 9 + vOffset].pos + VertexBuffer[8 + i * 9 + vOffset].pos) / 3;
+        normal1 = calculateFaceNormals(VertexBuffer[IndexBuffer[6 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[7 + i * 9 + vOffset]].pos, VertexBuffer[IndexBuffer[8 + i * 9 + vOffset]].pos);
+        
+        if((Settings & 16) == 16 && Magnitude(center + normal1) > Magnitude(center - normal1)) {
+            float a = IndexBuffer[6 + i * 9 + vOffset];
+            IndexBuffer[6 + i * 9 + vOffset] = IndexBuffer[7 + i * 9 + vOffset];
+            IndexBuffer[7 + i * 9 + vOffset] = a;
+            normal1 = -normal1;
+        }
         VertexBuffer[6 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[4] * ((Settings & 4) >> 2));
         VertexBuffer[7 + i * 9 + vOffset].norm = normal1;
         VertexBuffer[8 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[5] * ((Settings & 4) >> 2));
-        //lookup /= 9;
+        lookup /= 9;
+        if(inverted) { lookup = !lookup & 63; }
         //if((lookup == 7) && ((Settings & 2) == 2)) {v1 = float3(0, 1, 0); v2 = v1; v3 = v1; samplePoints[3] = v1; samplePoints[4] = v1; samplePoints[5] = v1;}
     }
 }

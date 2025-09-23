@@ -157,6 +157,8 @@ MonoBehaviour:
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
+  volumeRules: 0
+  facingRules: 0
   material: {fileID: 2100000, guid: c335867c5b2f71cbf80a9bcde404be07, type: 2}
   computeShader: {fileID: 7200000, guid: 84871cf6cf7353001ab0ff55e1692417, type: 3}
   bounds:
@@ -171,7 +173,7 @@ Transform:
   m_GameObject: {fileID: 193182894}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -4.59, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -286,6 +288,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: interpolate
       value: 1
       objectReference: {fileID: 0}
@@ -303,7 +309,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7463749026619433660, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -4.59
       objectReference: {fileID: 0}
     - target: {fileID: 7463749026619433660, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -484,7 +490,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 837526064}
-  - component: {fileID: 837526063}
+  - component: {fileID: 837526065}
   m_Layer: 0
   m_Name: Experiment (1)
   m_TagString: Untagged
@@ -492,31 +498,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!114 &837526063
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 837526062}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76f91c03322786296b2ea56c7bdf7e4e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Isolevel: 0
-  Case: 0
-  Depth: 10
-  lerpSpeed: 0.204
-  gizmosCooldown: 0
-  interpolate: 0
-  truncate: 0
-  randomVertexColoring: 0
-  material: {fileID: 2100000, guid: c335867c5b2f71cbf80a9bcde404be07, type: 2}
-  computeShader: {fileID: 7200000, guid: 96b605a1d7523bb45a1c5621e4c07e34, type: 3}
-  bounds:
-    m_Center: {x: 0, y: 0, z: 0}
-    m_Extent: {x: 500, y: 500, z: 500}
 --- !u!4 &837526064
 Transform:
   m_ObjectHideFlags: 0
@@ -532,6 +513,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &837526065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 837526062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d171966edb4de341e904137bfff22acf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Case: 0
+  material: {fileID: -876546973899608171, guid: 4c03a5a97cd69bb46a48ce69d0bd1906, type: 3}
+  computeShader: {fileID: 7200000, guid: 96b605a1d7523bb45a1c5621e4c07e34, type: 3}
+  bounds:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 500, y: 500, z: 500}
 --- !u!1 &1831202993
 GameObject:
   m_ObjectHideFlags: 0
