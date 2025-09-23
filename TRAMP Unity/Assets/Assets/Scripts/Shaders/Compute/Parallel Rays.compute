@@ -17,7 +17,7 @@ static const int triTable[297] = {
      1,  6,  3,  4,  5,  8, -1, -1, -1,   // 10
      0,  5,  3,  5,  8,  3,  6,  8,  3,   // 11
      1,  6,  3,  0,  5,  2, -1, -1, -1,   // 12
-     2,  6,  7,  2,  4,  6,  0,  4,  2,   // 13
+     2,  4,  6,  2,  3,  6,  5,  4,  2,   // 13
      0,  4,  2,  2,  4,  8,  1,  6,  3,   // 14
      2,  3,  8,  6,  3,  8, -1, -1, -1,   // 15
      6,  8,  7, -1, -1, -1, -1, -1, -1,   // 16
@@ -76,7 +76,7 @@ float Sample (float3 pos, float time) {
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
     float d = sqrt(x * x + y * y + z * z);
-    return sin(d) - sin(y) + sin(z);
+    return sin(d) - sin(y) + sin(z) - y * 0.01;
 }
 
 float Magnitude (float3 pos) {
