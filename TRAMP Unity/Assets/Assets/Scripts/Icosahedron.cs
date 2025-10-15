@@ -20,7 +20,10 @@ public class Icosahedron : MonoBehaviour {
             new Vector3(phi, 0, -1).normalized,
             new Vector3(phi, 0, 1).normalized,
             new Vector3(-phi, 0, -1).normalized,
-            new Vector3(-phi, 0, 1).normalized
+            new Vector3(-phi, 0, 1).normalized,
+            Vector3.zero,
+            Vector3.zero,
+            Vector3.zero
         };
 
         indices = new int[] {
@@ -43,8 +46,31 @@ public class Icosahedron : MonoBehaviour {
             2, 4, 11,
             2, 6, 10,
             6, 7, 8,
-            1, 8, 9
+            1, 8, 9,
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0
         };
+        subdivideTriangle(12, 0, 60);
     }
+
+    void subdivideTriangle(int vertexPos, int TriIndexPos, int indexPos) {
+        vertices[vertexPos] = vertices[indices[TriIndexPos]] + vertices[indices[TriIndexPos] + 1];
+        vertices[vertexPos + 1] = vertices[indices[TriIndexPos] + 1] + vertices[indices[TriIndexPos] + 2];
+        vertices[vertexPos + 2] = vertices[indices[TriIndexPos]] + vertices[indices[TriIndexPos] + 2];
+        indices[indexPos] = vertexPos;
+        indices[indexPos + 1] = vertexPos + 2;
+        indices[indexPos + 2] = indices[TriIndexPos];
+        indices[indexPos + 3] = vertexPos;
+        indices[indexPos + 4] = vertexPos + 1;
+        indices[indexPos + 5] = indices[TriIndexPos + 1];
+        indices[indexPos + 6] = vertexPos + 1;
+        indices[indexPos + 7] = vertexPos + 2;
+        indices[indexPos + 8] = indices[TriIndexPos + 2];
+        indices[TriIndexPos] = vertexPos;
+        indices[TriIndexPos + 1] = vertexPos + 1;
+        indices[TriIndexPos + 2] = vertexPos + 2;
+    }
+
     void Update() {}
 }

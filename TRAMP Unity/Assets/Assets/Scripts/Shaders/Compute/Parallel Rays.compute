@@ -70,14 +70,15 @@ float3 offset;
 RWStructuredBuffer<uint> IndexBuffer;
 RWStructuredBuffer<Vertex> VertexBuffer;
 RWStructuredBuffer<Vertex> rays;
-RWStructuredBuffer<uint> raysIndexes;
+RWStructuredBuffer<uint> raysIndices;
 
 float Sample (float3 pos, float time) {
     float x = pos.x + offset.x;
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
     float d = sqrt(x * x + y * y + z * z);
-    return y - sin(z); //sin(d) - sin(y) + sin(z) - y * 0.01;
+    return sin(d) - sin(y) + sin(z) - x * 0.01;
+    //return x * x * x * x - 5 * x * x + y * y * y * y - 5 * y * y + z * z * z * z - 5 * z * z + 10;
 }
 
 float Magnitude (float3 pos) {
@@ -89,7 +90,6 @@ float Magnitude (float3 pos) {
 
 
 float3 interpolateVertex(uint lookup, float3 ps[6], float ws[6]) {
-    
     int edge = triTable[lookup];
     if (edge != -1) {
         float3 p1 = ps[edgeTable[edge * 2]];
@@ -112,12 +112,12 @@ float3 calculateFaceNormals(float3 p1, float3 p2, float3 p3) {
 }
 
 
-[numthreads(20,1,1)]
+[numthreads(64,1,1)]
 void CSMain (uint id : SV_DispatchThreadID) {
     uint vOffset = id.x * 3;
-    uint a = raysIndexes[vOffset];
-    uint b = raysIndexes[vOffset + 1];
-    uint c = raysIndexes[vOffset + 2];
+    uint a = raysIndices[vOffset];
+    uint b = raysIndices[vOffset + 1];
+    uint c = raysIndices[vOffset + 2];
 
     //uint d = max(a, b); uint e = min(a, b); a = e; b = d; d = max(b, c); e = min(b, c); c = d; e = b; d = max(a, b); e = min(a, b); a = e; b = d;
     
@@ -125,6 +125,10 @@ void CSMain (uint id : SV_DispatchThreadID) {
     float3 v2 = normalize(rays[b].pos);
     float3 v3 = normalize(rays[c].pos);
     vOffset *= 3 * Depth;
+    
+    // VertexBuffer[0 + vOffset].pos -= (VertexBuffer[0 + vOffset].pos - v1) * lerpSpeed;
+    // VertexBuffer[1 + vOffset].pos -= (VertexBuffer[1 + vOffset].pos - v2) * lerpSpeed;
+    // VertexBuffer[2 + vOffset].pos -= (VertexBuffer[2 + vOffset].pos - v3) * lerpSpeed;
 
     float3 samplePoints[6] = {
         (v1 * 0),
@@ -186,7 +190,6 @@ void CSMain (uint id : SV_DispatchThreadID) {
         VertexBuffer[7 + i * 9 + vOffset].pos -= (VertexBuffer[7 + i * 9 + vOffset].pos - interpolateVertex(lookup + 7, samplePoints, ws)) * lerpSpeed;
         VertexBuffer[8 + i * 9 + vOffset].pos -= (VertexBuffer[8 + i * 9 + vOffset].pos - interpolateVertex(lookup + 8, samplePoints, ws)) * lerpSpeed;
         
-        
         bool InvertedYet = IndexBuffer[0 + i * 9 + vOffset] > IndexBuffer[1 + i * 9 + vOffset];
         if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {
             uint a = IndexBuffer[0 + i * 9 + vOffset];
@@ -201,7 +204,6 @@ void CSMain (uint id : SV_DispatchThreadID) {
             IndexBuffer[1 + i * 9 + vOffset] = a;
             normal1 = -normal1;
         }
-
         VertexBuffer[0 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[0] * ((Settings & 4) >> 2));
         VertexBuffer[1 + i * 9 + vOffset].norm = normal1;
         VertexBuffer[2 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[1] * ((Settings & 4) >> 2));
@@ -220,7 +222,6 @@ void CSMain (uint id : SV_DispatchThreadID) {
             IndexBuffer[4 + i * 9 + vOffset] = a;
             normal1 = -normal1;
         }
-
         VertexBuffer[3 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[2] * ((Settings & 4) >> 2));
         VertexBuffer[4 + i * 9 + vOffset].norm = normal1;
         VertexBuffer[5 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[3] * ((Settings & 4) >> 2));
