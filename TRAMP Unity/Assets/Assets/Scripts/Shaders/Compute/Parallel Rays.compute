@@ -66,6 +66,7 @@ uint Case;
 int Depth;
 float lerpSpeed;
 float3 offset;
+float4 rotation;
 
 RWStructuredBuffer<uint> IndexBuffer;
 RWStructuredBuffer<Vertex> VertexBuffer;
@@ -112,6 +113,20 @@ float3 calculateFaceNormals(float3 p1, float3 p2, float3 p3) {
 }
 
 
+float4 qmul(float4 q1, float4 q2){
+    return float4(
+        q2.xyz * q1.w + q1.xyz * q2.w + cross(q1.xyz, q2.xyz),
+        q1.w * q2.w - dot(q1.xyz, q2.xyz)
+    );
+}
+
+float3 rotateVector(float3 v, float4 r){
+    float4 r_c = r * float4(-1, -1, -1, 1);
+    return qmul(r, qmul(float4(v, 0), r_c)).xyz;
+}
+//from http://mathworld.wolfram.com/Quaternion.html per elseforty
+
+
 [numthreads(64,1,1)]
 void CSMain (uint id : SV_DispatchThreadID) {
     uint vOffset = id.x * 3;
@@ -124,6 +139,9 @@ void CSMain (uint id : SV_DispatchThreadID) {
     float3 v1 = normalize(rays[a].pos);
     float3 v2 = normalize(rays[b].pos);
     float3 v3 = normalize(rays[c].pos);
+    float3 sampleV1 = normalize(rotateVector(v1, rotation));
+    float3 sampleV2 = normalize(rotateVector(v2, rotation));
+    float3 sampleV3 = normalize(rotateVector(v3, rotation));
     vOffset *= 3 * Depth;
     
     // VertexBuffer[0 + vOffset].pos -= (VertexBuffer[0 + vOffset].pos - v1) * lerpSpeed;
@@ -131,6 +149,14 @@ void CSMain (uint id : SV_DispatchThreadID) {
     // VertexBuffer[2 + vOffset].pos -= (VertexBuffer[2 + vOffset].pos - v3) * lerpSpeed;
 
     float3 samplePoints[6] = {
+        (sampleV1 * 0),
+        (sampleV2 * 0),
+        (sampleV3 * 0),
+        (sampleV1 * 0.1),
+        (sampleV2 * 0.1),
+        (sampleV3 * 0.1)
+        };
+    float3 interpPoints[6] = {
         (v1 * 0),
         (v2 * 0),
         (v3 * 0),
@@ -160,10 +186,16 @@ void CSMain (uint id : SV_DispatchThreadID) {
         samplePoints[0] = samplePoints[3];
         samplePoints[1] = samplePoints[4];
         samplePoints[2] = samplePoints[5];
-        float projectionDistance = Magnitude(samplePoints[0]) + Magnitude(samplePoints[0] - samplePoints[1]);
-        samplePoints[3] = v1 * projectionDistance;
-        samplePoints[4] = v2 * projectionDistance;
-        samplePoints[5] = v3 * projectionDistance;
+        interpPoints[0] = interpPoints[3];
+        interpPoints[1] = interpPoints[4];
+        interpPoints[2] = interpPoints[5];
+        float projectionDistance = Magnitude(samplePoints[0]) + 1;//(Magnitude(interpPoints[0] - interpPoints[1]) + Magnitude(interpPoints[1] - interpPoints[2]) + Magnitude(interpPoints[2] - interpPoints[0])) / 3;
+        samplePoints[3] = sampleV1 * projectionDistance;
+        samplePoints[4] = sampleV2 * projectionDistance;
+        samplePoints[5] = sampleV3 * projectionDistance;
+        interpPoints[3] = v1 * projectionDistance;
+        interpPoints[4] = v2 * projectionDistance;
+        interpPoints[5] = v3 * projectionDistance;
         ws[0] = Sample(samplePoints[0], Time);
         ws[1] = Sample(samplePoints[1], Time);
         ws[2] = Sample(samplePoints[2], Time);
@@ -180,15 +212,15 @@ void CSMain (uint id : SV_DispatchThreadID) {
         if (lookup > 32) { lookup = 63 - lookup; inverted = true; }
         if (Case != 0) lookup = Case;
         lookup *= 9;
-        VertexBuffer[0 + i * 9 + vOffset].pos -= (VertexBuffer[0 + i * 9 + vOffset].pos - interpolateVertex(lookup,  samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[1 + i * 9 + vOffset].pos -= (VertexBuffer[1 + i * 9 + vOffset].pos - interpolateVertex(lookup + 1, samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[2 + i * 9 + vOffset].pos -= (VertexBuffer[2 + i * 9 + vOffset].pos - interpolateVertex(lookup + 2, samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[3 + i * 9 + vOffset].pos -= (VertexBuffer[3 + i * 9 + vOffset].pos - interpolateVertex(lookup + 3, samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[4 + i * 9 + vOffset].pos -= (VertexBuffer[4 + i * 9 + vOffset].pos - interpolateVertex(lookup + 4, samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[5 + i * 9 + vOffset].pos -= (VertexBuffer[5 + i * 9 + vOffset].pos - interpolateVertex(lookup + 5, samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[6 + i * 9 + vOffset].pos -= (VertexBuffer[6 + i * 9 + vOffset].pos - interpolateVertex(lookup + 6, samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[7 + i * 9 + vOffset].pos -= (VertexBuffer[7 + i * 9 + vOffset].pos - interpolateVertex(lookup + 7, samplePoints, ws)) * lerpSpeed;
-        VertexBuffer[8 + i * 9 + vOffset].pos -= (VertexBuffer[8 + i * 9 + vOffset].pos - interpolateVertex(lookup + 8, samplePoints, ws)) * lerpSpeed;
+        VertexBuffer[0 + i * 9 + vOffset].pos -= (VertexBuffer[0 + i * 9 + vOffset].pos - interpolateVertex(lookup, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[1 + i * 9 + vOffset].pos -= (VertexBuffer[1 + i * 9 + vOffset].pos - interpolateVertex(lookup + 1, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[2 + i * 9 + vOffset].pos -= (VertexBuffer[2 + i * 9 + vOffset].pos - interpolateVertex(lookup + 2, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[3 + i * 9 + vOffset].pos -= (VertexBuffer[3 + i * 9 + vOffset].pos - interpolateVertex(lookup + 3, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[4 + i * 9 + vOffset].pos -= (VertexBuffer[4 + i * 9 + vOffset].pos - interpolateVertex(lookup + 4, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[5 + i * 9 + vOffset].pos -= (VertexBuffer[5 + i * 9 + vOffset].pos - interpolateVertex(lookup + 5, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[6 + i * 9 + vOffset].pos -= (VertexBuffer[6 + i * 9 + vOffset].pos - interpolateVertex(lookup + 6, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[7 + i * 9 + vOffset].pos -= (VertexBuffer[7 + i * 9 + vOffset].pos - interpolateVertex(lookup + 7, interpPoints, ws)) * lerpSpeed;
+        VertexBuffer[8 + i * 9 + vOffset].pos -= (VertexBuffer[8 + i * 9 + vOffset].pos - interpolateVertex(lookup + 8, interpPoints, ws)) * lerpSpeed;
         
         bool InvertedYet = IndexBuffer[0 + i * 9 + vOffset] > IndexBuffer[1 + i * 9 + vOffset];
         if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {

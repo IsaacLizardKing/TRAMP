@@ -58,6 +58,7 @@ public class ExperimentComputeMesh : MonoBehaviour
     [SerializeField] MeshFilter meshFilter;
     [SerializeField] MeshRenderer meshRenderer;
     [SerializeField] Camera Cam;
+    [SerializeField] Transform playerMovement;
 
     Mesh mesh;
     Mesh Wesh;
@@ -112,7 +113,6 @@ public class ExperimentComputeMesh : MonoBehaviour
 
     private void Update()
     {
-        makeDaRays();
         var kernel = computeShader.FindKernel("CSMain");
         computeShader.GetKernelThreadGroupSizes(kernel, out var x, out _, out _);
         var groups = (triCount + (int)x - 1) / (int)x;
@@ -133,7 +133,8 @@ public class ExperimentComputeMesh : MonoBehaviour
         computeShader.SetInt("Case", Case);
         computeShader.SetInt("Depth", Depth);
         computeShader.SetInt("Settings", (interpolate ? 1 : 0) | (truncate ? 2 : 0) | (randomVertexColoring ? 4 : 0) | (volumeRules ? 8 : 0) | (facingRules ? 16 : 0));
-        computeShader.SetVector("offset", this.transform.position);
+        computeShader.SetVector("offset", playerMovement.transform.position);
+        computeShader.SetVector("rotation", new Vector4(Cam.transform.rotation.x, Cam.transform.rotation.y, Cam.transform.rotation.z, Cam.transform.rotation.w));
         computeShader.SetBuffer(kernel, "IndexBuffer", indexBuffer);
         computeShader.SetBuffer(kernel, "VertexBuffer", vertexBuffer);
         computeShader.SetBuffer(kernel, "rays", rays);
@@ -207,11 +208,11 @@ public class ExperimentComputeMesh : MonoBehaviour
             vertCount = 12;
             tempRcpuvrc = rcpuvrcIco();
         } else {
-            vertsImport = IcosahedronV();
-            indicesImport = IcosahedronI();
-            triCount = 20;
-            vertCount = 12;
-            tempRcpuvrc = rcpuvrcIco();
+            vertsImport = CamCorners();
+            indicesImport = CamCornersI();
+            triCount = 4;
+            vertCount = 6;
+            tempRcpuvrc = rcpuvrcCam();
         }
 
         raysCPU = new Vector3[vertsImport.Length + 3 * Subdivisions];
@@ -224,16 +225,27 @@ public class ExperimentComputeMesh : MonoBehaviour
 
         for(int i = 0; i < indicesImport.Length; i++) { raysIndicesCPU[i] = indicesImport[i]; }
 
-        if(culling){
+        if(Culling){
             triCount += cullMaster(0) / 3 - triCount;
             vertCount += cullMasterV(0) - vertCount;
         }
-
-        for(int i = 0, io = triCount * 3, v = vertCount; i < Subdivisions; i += 1, v += 3, io += 9){
-            subdivideTriangle(v, i * 3, io);
-            triCount += 3;
-            vertCount += 3;
+        
+        
+        var subdivsLeft = Subdivisions;
+        while(subdivsLeft > 0) {
+            var trisInLayer = triCount;
+            for(int i = 0, io = triCount * 3, v = vertCount; i < trisInLayer; i += 1, v += 3, io += 9){
+                subdivideTriangle(v, i * 3, io);
+                triCount += 3;
+                vertCount += 3;
+                subdivsLeft -= 1;
+            }
         }
+        
+        
+        
+        
+        
         if(Culling){
             triCount = cullMaster(0) / 3;
             vertCount = cullMasterV(0);
@@ -282,13 +294,20 @@ public class ExperimentComputeMesh : MonoBehaviour
         rcpuvrc[newVal] += 1;
     }
 
+    Vector3 interpVerts(Vector3 v1, Vector3 v2){
+        if(!Square && !Icosahedron){
+            var S1 = Cam.WorldToScreenPoint(v1);
+            var S2 = Cam.WorldToScreenPoint(v2);
+            var S3 = (S1 + S2) / 2;
+            return Cam.ScreenToWorldPoint(new Vector3(S3.x, S3.y, 1)).normalized;
+        }
+        return ((v1 + v2) / 2).normalized;
+    }
+
     void subdivideTriangle(int vertexPos, int TriIndexPos, int indexPos) {
-        raysCPU[vertexPos] = (raysCPU[raysIndicesCPU[TriIndexPos]] + raysCPU[raysIndicesCPU[TriIndexPos + 1]]) / 2;
-        raysCPU[vertexPos].Normalize();
-        raysCPU[vertexPos + 1] = (raysCPU[raysIndicesCPU[TriIndexPos + 1]] + raysCPU[raysIndicesCPU[TriIndexPos + 2]]) / 2;
-        raysCPU[vertexPos + 1].Normalize();
-        raysCPU[vertexPos + 2] = (raysCPU[raysIndicesCPU[TriIndexPos]] + raysCPU[raysIndicesCPU[TriIndexPos + 2]]) / 2;
-        raysCPU[vertexPos + 2].Normalize();
+        raysCPU[vertexPos] = interpVerts(raysCPU[raysIndicesCPU[TriIndexPos]], raysCPU[raysIndicesCPU[TriIndexPos + 1]]);
+        raysCPU[vertexPos + 1] = interpVerts(raysCPU[raysIndicesCPU[TriIndexPos + 1]], raysCPU[raysIndicesCPU[TriIndexPos + 2]]);
+        raysCPU[vertexPos + 2] = interpVerts(raysCPU[raysIndicesCPU[TriIndexPos]], raysCPU[raysIndicesCPU[TriIndexPos + 2]]);
 
         rcpuvrc[0] += 9; // compensates for all of these new triangles subtracting from 0's reference counter;
         alterRaysIndices(indexPos, raysIndicesCPU[TriIndexPos]);
@@ -446,53 +465,53 @@ public class ExperimentComputeMesh : MonoBehaviour
 //                                                            //
 //------------------------------------------------------------//
 
-    float Sample(Vector3 pos) {
+    // float Sample(Vector3 pos) {
 
-        float x = pos.x;
-        float y = pos.y;
-        float z = pos.z;
-        float d = Mathf.Sqrt(x * x + y * y + z * z);
-        return Mathf.Sin(d) - Mathf.Sin(x) + Mathf.Sin(y) - y * 0.01f;
-    }
+    //     float x = pos.x;
+    //     float y = pos.y;
+    //     float z = pos.z;
+    //     float d = Mathf.Sqrt(x * x + y * y + z * z);
+    //     return Mathf.Sin(d) - Mathf.Sin(x) + Mathf.Sin(y) - y * 0.01f;
+    // }
 
-    float Magnitude(Vector3 pos) {
-        float x = pos.x;
-        float y = pos.y;
-        float z = pos.z;
-        return Mathf.Sqrt(x * x + y * y + z * z);
-    }
+    // float Magnitude(Vector3 pos) {
+    //     float x = pos.x;
+    //     float y = pos.y;
+    //     float z = pos.z;
+    //     return Mathf.Sqrt(x * x + y * y + z * z);
+    // }
 
-    void OnDrawGizmosSelected() {
-        makeDaRays();
-        Vector3 offset = this.gameObject.transform.position;
-        Gizmos.color = new Color (1f, 1f, 1f, 0.75f);
-        float scale = 0.1f;
-        for(int i = 0; i < Depth; i++) {
-            for(int j = 0; j < raysIndicesCPU.Length / 3; j++) {
-                Gizmos.DrawLine(offset + raysCPU[raysIndicesCPU[j * 3]] * scale, offset + raysCPU[raysIndicesCPU[j * 3 + 1]] * scale);
-                Gizmos.DrawLine(offset + raysCPU[raysIndicesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndicesCPU[j * 3 + 1]] * scale);
-                Gizmos.DrawLine(offset + raysCPU[raysIndicesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndicesCPU[j * 3]] * scale);
-            }
-            scale += Magnitude(raysCPU[0] * scale - raysCPU[1] * scale);
-        }
-        Gizmos.color = new Color(0.75f, 0.75f, 0.0f, 0.75f);
-        for(int i = 0; i < raysCPU.Length; i++) {
-            Gizmos.DrawRay(offset, offset + raysCPU[i] * Depth * 100);
-        }
-        Color green = new Color(0f, 1f, 0f, 0.75f);
-        Color red = new Color(1f, 0f, 0f, 0.75f);
-        scale = 0.1f;
-        for(int i = 0; i < Depth; i++) {
-            for(int j = 0; j < raysCPU.Length; j++) {
-                float size = Sample(raysCPU[j] * scale) / Isolevel;
-                if(size >= 1f) { Gizmos.color = green; } 
-                else { Gizmos.color = red; }
-                size = Mathf.Min(0.2f * scale, 10f);
-                //Gizmos.DrawCube(offset + raysCPU[j] * scale, new Vector3(size, size, size));
-            }
-            scale += Magnitude(raysCPU[0] * scale - raysCPU[1] * scale);
-        }
-    }
+    // void OnDrawGizmosSelected() {
+    //     makeDaRays();
+    //     Vector3 offset = this.gameObject.transform.position;
+    //     Gizmos.color = new Color (1f, 1f, 1f, 0.75f);
+    //     float scale = 0.1f;
+    //     for(int i = 0; i < Depth; i++) {
+    //         for(int j = 0; j < raysIndicesCPU.Length / 3; j++) {
+    //             Gizmos.DrawLine(offset + raysCPU[raysIndicesCPU[j * 3]] * scale, offset + raysCPU[raysIndicesCPU[j * 3 + 1]] * scale);
+    //             Gizmos.DrawLine(offset + raysCPU[raysIndicesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndicesCPU[j * 3 + 1]] * scale);
+    //             Gizmos.DrawLine(offset + raysCPU[raysIndicesCPU[j * 3 + 2]] * scale, offset + raysCPU[raysIndicesCPU[j * 3]] * scale);
+    //         }
+    //         scale += Magnitude(raysCPU[0] * scale - raysCPU[1] * scale);
+    //     }
+    //     Gizmos.color = new Color(0.75f, 0.75f, 0.0f, 0.75f);
+    //     for(int i = 0; i < raysCPU.Length; i++) {
+    //         Gizmos.DrawRay(offset, offset + raysCPU[i] * Depth * 100);
+    //     }
+    //     Color green = new Color(0f, 1f, 0f, 0.75f);
+    //     Color red = new Color(1f, 0f, 0f, 0.75f);
+    //     scale = 0.1f;
+    //     for(int i = 0; i < Depth; i++) {
+    //         for(int j = 0; j < raysCPU.Length; j++) {
+    //             float size = Sample(raysCPU[j] * scale) / Isolevel;
+    //             if(size >= 1f) { Gizmos.color = green; } 
+    //             else { Gizmos.color = red; }
+    //             size = Mathf.Min(0.2f * scale, 10f);
+    //             //Gizmos.DrawCube(offset + raysCPU[j] * scale, new Vector3(size, size, size));
+    //         }
+    //         scale += Magnitude(raysCPU[0] * scale - raysCPU[1] * scale);
+    //     }
+    // }
     Vector3[] IcosahedronV() {
         float phi = 1.618033988749894f;
         return new Vector3[] { new Vector3(-1, phi, 0), new Vector3(1, phi, 0), new Vector3(-1, -phi, 0), new Vector3(1, -phi, 0), new Vector3(0, -1, phi), new Vector3(0, 1, phi), new Vector3(0, -1, -phi), new Vector3(0, 1, -phi), new Vector3(phi, 0, -1), new Vector3(phi, 0, 1), new Vector3(-phi, 0, -1), new Vector3(-phi, 0, 1) };
@@ -511,5 +530,26 @@ public class ExperimentComputeMesh : MonoBehaviour
     }
     int[] rcpuvrcSqr() {
         return new int[] { 4, 4, 4, 4, 4, 4, 4, 4 };
+    }
+    Vector3[] CamCorners() {
+        Vector3 v1 = Cam.ScreenToWorldPoint(new Vector3(0, 0, 0.5f));
+        Vector3 v2 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth / 2, 0, 0.5f));
+        Vector3 v3 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth, 0, 0.5f));
+        Vector3 v4 = Cam.ScreenToWorldPoint(new Vector3(0, Cam.pixelHeight, 0.5f));
+        Vector3 v5 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth / 2, Cam.pixelHeight, 0.5f));
+        Vector3 v6 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth, Cam.pixelHeight, 0.5f));
+        return new Vector3[] {v1, v2, v3, v4, v5, v6};
+    }
+
+    int[] CamCornersI(){
+        return new int[] {
+            1, 3, 0,
+            1, 4, 3,
+            1, 5, 4,
+            1, 2, 5
+        };
+    }
+    int[] rcpuvrcCam() {
+        return new int[] {1, 4, 1, 2, 2, 2};
     }
 }
