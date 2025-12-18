@@ -351,7 +351,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76f91c03322786296b2ea56c7bdf7e4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Isolevel: -0.25
+  Isolevel: 0
   Case: 0
   Depth: 30
   Subdivisions: 20
@@ -374,6 +374,10 @@ MonoBehaviour:
   meshRenderer: {fileID: 193182899}
   Cam: {fileID: 1831202995}
   playerMovement: {fileID: 230287586}
+  screenMeshTop: 0.5
+  screenMeshLeft: 0.5
+  screenMesBottom: 0
+  screenMesRight: 0
 --- !u!4 &193182896
 Transform:
   m_ObjectHideFlags: 0
@@ -701,7 +705,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: Isolevel
-      value: -0.25
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: truncate
@@ -740,8 +744,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: screenMeshTop
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: gizmosCooldown
       value: 3.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: screenMeshLeft
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: randomVertexColoring
@@ -1148,7 +1160,7 @@ Camera:
   m_GameObject: {fileID: 1831202993}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2

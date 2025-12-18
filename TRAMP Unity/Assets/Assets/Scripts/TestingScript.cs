@@ -59,6 +59,10 @@ public class ExperimentComputeMesh : MonoBehaviour
     [SerializeField] MeshRenderer meshRenderer;
     [SerializeField] Camera Cam;
     [SerializeField] Transform playerMovement;
+    [SerializeField] float screenMeshTop;
+    [SerializeField] float screenMeshLeft;
+    [SerializeField] float screenMesBottom;
+    [SerializeField] float screenMesRight;
 
     Mesh mesh;
     Mesh Wesh;
@@ -532,12 +536,16 @@ public class ExperimentComputeMesh : MonoBehaviour
         return new int[] { 4, 4, 4, 4, 4, 4, 4, 4 };
     }
     Vector3[] CamCorners() {
-        Vector3 v1 = Cam.ScreenToWorldPoint(new Vector3(0, 0, 0.5f));
-        Vector3 v2 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth / 2, 0, 0.5f));
-        Vector3 v3 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth, 0, 0.5f));
-        Vector3 v4 = Cam.ScreenToWorldPoint(new Vector3(0, Cam.pixelHeight, 0.5f));
-        Vector3 v5 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth / 2, Cam.pixelHeight, 0.5f));
-        Vector3 v6 = Cam.ScreenToWorldPoint(new Vector3(Cam.pixelWidth, Cam.pixelHeight, 0.5f));
+        float top = Cam.pixelHeight * screenMeshTop;
+        float bottom = Cam.pixelHeight * screenMesBottom;
+        float left = Cam.pixelWidth * screenMeshLeft;
+        float right = Cam.pixelWidth * screenMesRight;
+        Vector3 v1 = Cam.ScreenToWorldPoint(new Vector3(left, bottom, 0.5f));
+        Vector3 v2 = Cam.ScreenToWorldPoint(new Vector3((left + right) / 2, bottom, 0.5f));
+        Vector3 v3 = Cam.ScreenToWorldPoint(new Vector3(right, bottom, 0.5f));
+        Vector3 v4 = Cam.ScreenToWorldPoint(new Vector3(left, top, 0.5f));
+        Vector3 v5 = Cam.ScreenToWorldPoint(new Vector3((left + right) / 2, top, 0.5f));
+        Vector3 v6 = Cam.ScreenToWorldPoint(new Vector3(right, top, 0.5f));
         return new Vector3[] {v1, v2, v3, v4, v5, v6};
     }
 

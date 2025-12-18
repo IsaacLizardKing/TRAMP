@@ -78,7 +78,9 @@ float Sample (float3 pos, float time) {
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
     float d = sqrt(x * x + y * y + z * z);
-    return sin(d) - sin(y) + sin(z) - x * 0.01;
+    //return sin(x) * sin(y) * sin(z);
+    //return sin(z) + y / 100 + sin(sqrt(d));
+    return sin(d) - sin(y) + sin(x) - z * 0.01;
     //return x * x * x * x - 5 * x * x + y * y * y * y - 5 * y * y + z * z * z * z - 5 * z * z + 10;
 }
 
