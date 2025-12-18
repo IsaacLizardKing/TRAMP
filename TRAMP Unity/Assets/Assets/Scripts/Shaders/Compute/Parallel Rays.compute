@@ -78,9 +78,10 @@ float Sample (float3 pos, float time) {
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
     float d = sqrt(x * x + y * y + z * z);
+    //return (x * x + y * y - (sin(time) * sin(time))) + z * z;
     //return sin(x) * sin(y) * sin(z);
     //return sin(z) + y / 100 + sin(sqrt(d));
-    return sin(d) - sin(y) + sin(x) - z * 0.01;
+    return sin(d) - sin(y) + sin(z + cos(time) + time * 0.00000001) - x * 0.01;
     //return x * x * x * x - 5 * x * x + y * y * y * y - 5 * y * y + z * z * z * z - 5 * z * z + 10;
 }
 
@@ -191,7 +192,7 @@ void CSMain (uint id : SV_DispatchThreadID) {
         interpPoints[0] = interpPoints[3];
         interpPoints[1] = interpPoints[4];
         interpPoints[2] = interpPoints[5];
-        float projectionDistance = Magnitude(samplePoints[0]) + 1;//(Magnitude(interpPoints[0] - interpPoints[1]) + Magnitude(interpPoints[1] - interpPoints[2]) + Magnitude(interpPoints[2] - interpPoints[0])) / 3;
+        float projectionDistance = Magnitude(samplePoints[0]) + 0.5;//(Magnitude(interpPoints[0] - interpPoints[1]) + Magnitude(interpPoints[1] - interpPoints[2]) + Magnitude(interpPoints[2] - interpPoints[0])) / 3;
         samplePoints[3] = sampleV1 * projectionDistance;
         samplePoints[4] = sampleV2 * projectionDistance;
         samplePoints[5] = sampleV3 * projectionDistance;
@@ -223,7 +224,11 @@ void CSMain (uint id : SV_DispatchThreadID) {
         VertexBuffer[6 + i * 9 + vOffset].pos -= (VertexBuffer[6 + i * 9 + vOffset].pos - interpolateVertex(lookup + 6, interpPoints, ws)) * lerpSpeed;
         VertexBuffer[7 + i * 9 + vOffset].pos -= (VertexBuffer[7 + i * 9 + vOffset].pos - interpolateVertex(lookup + 7, interpPoints, ws)) * lerpSpeed;
         VertexBuffer[8 + i * 9 + vOffset].pos -= (VertexBuffer[8 + i * 9 + vOffset].pos - interpolateVertex(lookup + 8, interpPoints, ws)) * lerpSpeed;
+        float adj = 0.001;
         
+        float3 xadj = float3(adj, 0, 0);
+        float3 yadj = float3(0, adj, 0);
+        float3 zadj = float3(0, 0, adj);
         bool InvertedYet = IndexBuffer[0 + i * 9 + vOffset] > IndexBuffer[1 + i * 9 + vOffset];
         if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {
             uint a = IndexBuffer[0 + i * 9 + vOffset];
@@ -241,6 +246,12 @@ void CSMain (uint id : SV_DispatchThreadID) {
         VertexBuffer[0 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[0] * ((Settings & 4) >> 2));
         VertexBuffer[1 + i * 9 + vOffset].norm = normal1;
         VertexBuffer[2 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[1] * ((Settings & 4) >> 2));
+        //VertexBuffer[0 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[0 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[0 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[0 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[0 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[0 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[0 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[0 + i * 9 + vOffset].norm + VertexBuffer[0 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[0 + i * 9 + vOffset].norm - VertexBuffer[6 + i * 9 + vOffset].pos)) { VertexBuffer[0 + i * 9 + vOffset].norm *= -1; }
+        //VertexBuffer[1 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[1 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[1 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[1 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[1 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[1 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[1 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[1 + i * 9 + vOffset].norm + VertexBuffer[1 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[1 + i * 9 + vOffset].norm - VertexBuffer[6 + i * 9 + vOffset].pos)) { VertexBuffer[1 + i * 9 + vOffset].norm *= -1; }
+        //VertexBuffer[2 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[2 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[2 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[2 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[2 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[2 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[2 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[2 + i * 9 + vOffset].norm + VertexBuffer[2 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[2 + i * 9 + vOffset].norm - VertexBuffer[6 + i * 9 + vOffset].pos)) { VertexBuffer[2 + i * 9 + vOffset].norm *= -1; }
 
         InvertedYet = IndexBuffer[3 + i * 9 + vOffset] > IndexBuffer[4 + i * 9 + vOffset];
         if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {
@@ -256,9 +267,16 @@ void CSMain (uint id : SV_DispatchThreadID) {
             IndexBuffer[4 + i * 9 + vOffset] = a;
             normal1 = -normal1;
         }
-        VertexBuffer[3 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[2] * ((Settings & 4) >> 2));
+        VertexBuffer[3 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[0] * ((Settings & 4) >> 2));
         VertexBuffer[4 + i * 9 + vOffset].norm = normal1;
-        VertexBuffer[5 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[3] * ((Settings & 4) >> 2));
+        VertexBuffer[5 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[1] * ((Settings & 4) >> 2));
+
+        //VertexBuffer[3 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[3 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[3 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[3 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[3 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[3 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[3 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[3 + i * 9 + vOffset].norm + VertexBuffer[3 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[3 + i * 9 + vOffset].norm - VertexBuffer[6 + i * 9 + vOffset].pos)) { VertexBuffer[3 + i * 9 + vOffset].norm *= -1; }
+        //VertexBuffer[4 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[4 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[4 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[4 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[4 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[4 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[4 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[4 + i * 9 + vOffset].norm + VertexBuffer[4 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[4 + i * 9 + vOffset].norm - VertexBuffer[6 + i * 9 + vOffset].pos)) { VertexBuffer[4 + i * 9 + vOffset].norm *= -1; }
+        //VertexBuffer[5 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[5 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[5 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[5 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[5 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[5 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[5 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[5 + i * 9 + vOffset].norm + VertexBuffer[5 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[5 + i * 9 + vOffset].norm - VertexBuffer[6 + i * 9 + vOffset].pos)) { VertexBuffer[5 + i * 9 + vOffset].norm *= -1; }
         InvertedYet = IndexBuffer[6 + i * 9 + vOffset] > IndexBuffer[7 + i * 9 + vOffset];
         if(((Settings & 8) == 8 && ((inside && !InvertedYet && !inverted) || (!inside && InvertedYet && !inverted) || (!inside && !InvertedYet && inverted)))) {
             float a = IndexBuffer[6 + i * 9 + vOffset];
@@ -274,9 +292,16 @@ void CSMain (uint id : SV_DispatchThreadID) {
             IndexBuffer[7 + i * 9 + vOffset] = a;
             normal1 = -normal1;
         }
-        VertexBuffer[6 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[4] * ((Settings & 4) >> 2));
+        VertexBuffer[6 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[0] * ((Settings & 4) >> 2));
         VertexBuffer[7 + i * 9 + vOffset].norm = normal1;
-        VertexBuffer[8 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[5] * ((Settings & 4) >> 2));
+        VertexBuffer[8 + i * 9 + vOffset].norm = normalize(normal1 + samplePoints[1] * ((Settings & 4) >> 2));
+
+        //VertexBuffer[6 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[6 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[6 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[6 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[6 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[6 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[6 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[6 + i * 9 + vOffset].norm + VertexBuffer[6 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[6 + i * 9 + vOffset].norm - VertexBuffer[6 + i * 9 + vOffset].pos)) { VertexBuffer[6 + i * 9 + vOffset].norm *= -1; }
+        //VertexBuffer[7 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[7 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[7 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[7 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[7 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[7 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[7 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[8 + i * 9 + vOffset].norm + VertexBuffer[7 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[7 + i * 9 + vOffset].norm - VertexBuffer[7 + i * 9 + vOffset].pos)) { VertexBuffer[7 + i * 9 + vOffset].norm *= -1; }
+        //VertexBuffer[8 + i * 9 + vOffset].norm = normalize(float3((Sample(VertexBuffer[8 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[8 + i * 9 + vOffset].pos + xadj, Time)) / adj, (Sample(VertexBuffer[8 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[8 + i * 9 + vOffset].pos + yadj, Time)) / adj, (Sample(VertexBuffer[8 + i * 9 + vOffset].pos, Time) - Sample(VertexBuffer[8 + i * 9 + vOffset].pos + zadj, Time)) / adj));
+        //if (Magnitude(VertexBuffer[7 + i * 9 + vOffset].norm + VertexBuffer[8 + i * 9 + vOffset].pos) > Magnitude(VertexBuffer[8 + i * 9 + vOffset].norm - VertexBuffer[8 + i * 9 + vOffset].pos)) { VertexBuffer[8 + i * 9 + vOffset].norm *= -1; }
         lookup /= 9;
         if(inverted) { lookup = !lookup & 63; }
         //if((lookup == 7) && ((Settings & 2) == 2)) {v1 = float3(0, 1, 0); v2 = v1; v3 = v1; samplePoints[3] = v1; samplePoints[4] = v1; samplePoints[5] = v1;}
