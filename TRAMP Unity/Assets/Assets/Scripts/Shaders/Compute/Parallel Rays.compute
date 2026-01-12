@@ -67,6 +67,7 @@ int Depth;
 float lerpSpeed;
 float3 offset;
 float4 rotation;
+float stepAngle;
 
 RWStructuredBuffer<uint> IndexBuffer;
 RWStructuredBuffer<Vertex> VertexBuffer;
@@ -77,12 +78,44 @@ float Sample (float3 pos, float time) {
     float x = pos.x + offset.x;
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
+
+
+
+    /*
     float d = sqrt(x * x + y * y + z * z);
     //return (x * x + y * y - (sin(time) * sin(time))) + z * z;
     //return sin(x) * sin(y) * sin(z);
-    //return sin(z) + y / 100 + sin(sqrt(d));
-    return sin(d) - sin(y) + sin(z + cos(time) + time * 0.00000001) - x * 0.01;
+    return sin(z) + y / 100 + sin(sqrt(d));
+    float meow = 0;
+    if (y < 0){
+    meow = sin(y) + y * 0.1;
+    } */
+    //return -meow + sin(d) - sin(y) + sin(z /*+ cos(time) + time * 0.00000001*/  ) - x * 0.01;
     //return x * x * x * x - 5 * x * x + y * y * y * y - 5 * y * y + z * z * z * z - 5 * z * z + 10;
+    
+    float R = 2;
+    float n = 3;
+    float r_minor= 9;
+    float pipe_radius = 0.7;
+    float phase = time * 0.5;
+    float r = sqrt(x * x + y * y);
+    float theta = atan2(y, x);
+    float u = r - R;
+    float v = z;
+
+    float rho = sqrt(u * u + v * v);
+    float phi = atan2(v, u);
+
+    float seg = (1.57079633) / n;
+    float phi_prime = (phi - theta / n + phase) % seg;
+
+    float dx = rho * cos(phi_prime)- r_minor;
+    float dy = rho * sin(phi_prime);
+
+    return dx * dx + dy * dy;
+
+
+
 }
 
 float Magnitude (float3 pos) {
@@ -137,8 +170,6 @@ void CSMain (uint id : SV_DispatchThreadID) {
     uint b = raysIndices[vOffset + 1];
     uint c = raysIndices[vOffset + 2];
 
-    //uint d = max(a, b); uint e = min(a, b); a = e; b = d; d = max(b, c); e = min(b, c); c = d; e = b; d = max(a, b); e = min(a, b); a = e; b = d;
-    
     float3 v1 = normalize(rays[a].pos);
     float3 v2 = normalize(rays[b].pos);
     float3 v3 = normalize(rays[c].pos);
@@ -146,10 +177,6 @@ void CSMain (uint id : SV_DispatchThreadID) {
     float3 sampleV2 = normalize(rotateVector(v2, rotation));
     float3 sampleV3 = normalize(rotateVector(v3, rotation));
     vOffset *= 3 * Depth;
-    
-    // VertexBuffer[0 + vOffset].pos -= (VertexBuffer[0 + vOffset].pos - v1) * lerpSpeed;
-    // VertexBuffer[1 + vOffset].pos -= (VertexBuffer[1 + vOffset].pos - v2) * lerpSpeed;
-    // VertexBuffer[2 + vOffset].pos -= (VertexBuffer[2 + vOffset].pos - v3) * lerpSpeed;
 
     float3 samplePoints[6] = {
         (sampleV1 * 0),
@@ -192,7 +219,7 @@ void CSMain (uint id : SV_DispatchThreadID) {
         interpPoints[0] = interpPoints[3];
         interpPoints[1] = interpPoints[4];
         interpPoints[2] = interpPoints[5];
-        float projectionDistance = Magnitude(samplePoints[0]) + 0.5;//(Magnitude(interpPoints[0] - interpPoints[1]) + Magnitude(interpPoints[1] - interpPoints[2]) + Magnitude(interpPoints[2] - interpPoints[0])) / 3;
+        float projectionDistance = sin(stepAngle) * Magnitude(samplePoints[0]) + Magnitude(samplePoints[0]);//(Magnitude(interpPoints[0] - interpPoints[1]) + Magnitude(interpPoints[1] - interpPoints[2]) + Magnitude(interpPoints[2] - interpPoints[0])) / 3;
         samplePoints[3] = sampleV1 * projectionDistance;
         samplePoints[4] = sampleV2 * projectionDistance;
         samplePoints[5] = sampleV3 * projectionDistance;

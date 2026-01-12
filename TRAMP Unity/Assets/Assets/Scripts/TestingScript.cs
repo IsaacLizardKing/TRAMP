@@ -19,10 +19,10 @@ public class ExperimentComputeMesh : MonoBehaviour
     [Range(0.0000000000000001f, 1)]
     public float lerpSpeed;
 
-    [Range(0, 1f)]
-    public float CullCushion;
+    [Range(0, 0.785398163f)]
+    public float stepAngle;
     
-    
+    float CullCushion = 0; //deprecated
     
 
     [SerializeField] bool interpolate;
@@ -134,6 +134,7 @@ public class ExperimentComputeMesh : MonoBehaviour
         computeShader.SetFloat("Time", simulationTime);
         computeShader.SetFloat("Isolevel", Isolevel);
         computeShader.SetFloat("lerpSpeed", lerpSpeed);
+        computeShader.SetFloat("stepAngle", stepAngle);
         computeShader.SetInt("Case", Case);
         computeShader.SetInt("Depth", Depth);
         computeShader.SetInt("Settings", (interpolate ? 1 : 0) | (truncate ? 2 : 0) | (randomVertexColoring ? 4 : 0) | (volumeRules ? 8 : 0) | (facingRules ? 16 : 0));

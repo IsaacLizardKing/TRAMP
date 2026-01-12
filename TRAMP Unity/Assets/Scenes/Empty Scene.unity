@@ -220,10 +220,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -400,10 +400,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -605,10 +605,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -773,7 +773,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &488537365
 Transform:
   m_ObjectHideFlags: 0
@@ -978,10 +978,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -1104,10 +1104,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -1197,7 +1197,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: Depth
-      value: 100
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: Square
@@ -1222,6 +1222,10 @@ PrefabInstance:
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
+      propertyPath: stepAngle
+      value: 0.15
       objectReference: {fileID: 0}
     - target: {fileID: 6886013151963325671, guid: 5e0fdcf00428041e8a8a81a093e576f9, type: 3}
       propertyPath: CullCushion
@@ -1421,10 +1425,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -1718,10 +1722,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -1844,10 +1848,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -1970,10 +1974,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -2096,10 +2100,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -2359,10 +2363,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -2485,10 +2489,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -2611,10 +2615,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -2737,10 +2741,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -3017,10 +3021,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
@@ -3143,10 +3147,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Isolevel: 0
   Case: 0
-  Depth: 100
+  Depth: 50
   Subdivisions: 20
   lerpSpeed: 1
-  CullCushion: 0
+  stepAngle: 0.15
   interpolate: 1
   truncate: 0
   randomVertexColoring: 0
