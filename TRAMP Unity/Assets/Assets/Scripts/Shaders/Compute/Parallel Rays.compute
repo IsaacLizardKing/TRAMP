@@ -78,7 +78,14 @@ float Sample (float3 pos, float time) {
     float x = pos.x + offset.x;
     float y = pos.y + offset.y;
     float z = pos.z + offset.z;
-
+    float boundSize = 15;
+    x = (abs(x) + boundSize) % (boundSize * 2) - boundSize;
+    y = (abs(y) + boundSize) % (boundSize * 2) - boundSize;
+    z = (abs(z) + boundSize) % (boundSize * 2) - boundSize;
+    //float d = sqrt(x * x + y * y + z * z);
+    //return sin(z) + y / 100 + sin(sqrt(d));
+    //return sin(d) - sin(y) + sin(z + cos(time) + time * 0.00000001) - x * 0.01;
+    //return sin(d) - sin(y) + sin(z) - x * 0.01 + sin(x) * (sin(time) + sin(3.14159265358979323846264 * time / 2));
 
 
     /*

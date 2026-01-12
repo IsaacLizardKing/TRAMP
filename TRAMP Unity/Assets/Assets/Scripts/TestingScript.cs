@@ -10,7 +10,7 @@ public class ExperimentComputeMesh : MonoBehaviour
     [Range(0, 32)] 
     public int Case;
 
-    [Range(0, 100)] 
+    [Range(1, 100)] 
     public int Depth;
     
     [Range(0, 100)] 
@@ -52,55 +52,41 @@ public class ExperimentComputeMesh : MonoBehaviour
     int tris;
     
 
-    [SerializeField] Material material;
-    [SerializeField] ComputeShader computeShader;
+    [SerializeField] public Material material;
+    [SerializeField] public ComputeShader computeShader;
     [SerializeField] Bounds bounds = new Bounds(Vector3.zero, new Vector3(1000, 1000, 1000)); // set your value
     [SerializeField] MeshFilter meshFilter;
     [SerializeField] MeshRenderer meshRenderer;
-    [SerializeField] Camera Cam;
-    [SerializeField] Transform playerMovement;
-    [SerializeField] float screenMeshTop;
-    [SerializeField] float screenMeshLeft;
-    [SerializeField] float screenMesBottom;
-    [SerializeField] float screenMesRight;
+    [SerializeField] public Camera Cam;
+    [SerializeField] public Transform playerMovement;
+    [SerializeField] public float screenMeshTop;
+    [SerializeField] public float screenMeshLeft;
+    [SerializeField] public float screenMeshBottom;
+    [SerializeField] public float screenMeshRight;
 
     Mesh mesh;
     Mesh Wesh;
     GraphicsBuffer indexBuffer;
     GraphicsBuffer vertexBuffer;
-    float simulationTime;
+    float simulationTime = 0;
 
     private int vertexCount = 4608;
     private int indexCount  = 4608;
 
     private int triCount;
     private int vertCount;
-
-    void Start()
+    
+    void OnEnable()
     {
-
-        mesh = CreateMesh();
-        Debug.Log(meshFilter);
-        meshFilter.sharedMesh = mesh;
-        meshRenderer.sharedMaterial = material;
-
-        makeDaRays();
-
-        indexBuffer = mesh.GetIndexBuffer();
-        vertexBuffer = mesh.GetVertexBuffer(0);
-    }
-
-    void Awake()
-    {
-
-        makeDaRays();
         mesh = CreateMesh();
         meshFilter.sharedMesh = mesh;
         meshRenderer.sharedMaterial = material;
 
-
+        makeDaRays();
+        Debug.Log(raysIndices);
         indexBuffer = mesh.GetIndexBuffer();
         vertexBuffer = mesh.GetVertexBuffer(0);
+
     }
 
     void OnDestroy()
@@ -180,7 +166,6 @@ public class ExperimentComputeMesh : MonoBehaviour
             initialVertices[i] = new Vertex { position = new Vector3(0f, 0f, 0f), normal = new Vector3(0f, 0f, -1f), color = Vector4.one / 2, uv0 = new Vector2(0, 0) };
             indices[i] = i;
         }
-
         mesh.SetVertexBufferData(initialVertices, 0, 0, vertexCount);
 
         mesh.SetIndexBufferData(indices, 0, 0, indexCount);
@@ -189,8 +174,6 @@ public class ExperimentComputeMesh : MonoBehaviour
         mesh.SetSubMesh(0, new SubMeshDescriptor(0, indexCount), MeshUpdateFlags.DontRecalculateBounds);
 
         mesh.RecalculateNormals();
-        Debug.Log("meow4");
-        Debug.Log(indexBuffer);
 
         return mesh;
     }
@@ -218,6 +201,7 @@ public class ExperimentComputeMesh : MonoBehaviour
             triCount = 4;
             vertCount = 6;
             tempRcpuvrc = rcpuvrcCam();
+            Debug.Log("meow");
         }
 
         raysCPU = new Vector3[vertsImport.Length + 3 * Subdivisions];
@@ -230,11 +214,6 @@ public class ExperimentComputeMesh : MonoBehaviour
 
         for(int i = 0; i < indicesImport.Length; i++) { raysIndicesCPU[i] = indicesImport[i]; }
 
-        if(Culling){
-            triCount += cullMaster(0) / 3 - triCount;
-            vertCount += cullMasterV(0) - vertCount;
-        }
-        
         
         var subdivsLeft = Subdivisions;
         while(subdivsLeft > 0) {
@@ -245,6 +224,7 @@ public class ExperimentComputeMesh : MonoBehaviour
                 vertCount += 3;
                 subdivsLeft -= 1;
             }
+            Debug.Log("Meow!!");
         }
         
         
@@ -290,7 +270,10 @@ public class ExperimentComputeMesh : MonoBehaviour
         Wesh.RecalculateNormals();
 
         rays = Wesh.GetVertexBuffer(0);
+        Debug.Log(raysCPU.Length);
         raysIndices = Wesh.GetIndexBuffer();
+        Debug.Log(raysIndicesCPU.Length);
+
     }
 
     void alterRaysIndices(int indexPos, int newVal){
@@ -538,9 +521,9 @@ public class ExperimentComputeMesh : MonoBehaviour
     }
     Vector3[] CamCorners() {
         float top = Cam.pixelHeight * screenMeshTop;
-        float bottom = Cam.pixelHeight * screenMesBottom;
+        float bottom = Cam.pixelHeight * screenMeshBottom;
         float left = Cam.pixelWidth * screenMeshLeft;
-        float right = Cam.pixelWidth * screenMesRight;
+        float right = Cam.pixelWidth * screenMeshRight;
         Vector3 v1 = Cam.ScreenToWorldPoint(new Vector3(left, bottom, 0.5f));
         Vector3 v2 = Cam.ScreenToWorldPoint(new Vector3((left + right) / 2, bottom, 0.5f));
         Vector3 v3 = Cam.ScreenToWorldPoint(new Vector3(right, bottom, 0.5f));
